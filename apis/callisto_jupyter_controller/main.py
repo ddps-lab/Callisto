@@ -22,10 +22,17 @@ result_get_kubeconfig = subprocess.run([
 ])
 
 def generate_yaml(user_namespace, endpoint_uid, cpu_core, memory, storage):
-    content = f"""apiVersion: v1
+    content = f"""---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {user_namespace}
+---
+apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: {endpoint_uid}-pvc
+  namespace: {user_namespace}
 spec:
   accessModes:
     - ReadWriteOnce
@@ -33,11 +40,6 @@ spec:
   resources:
     requests:
       storage: {storage}Gi
----
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: {user_namespace}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -54,6 +56,8 @@ spec:
       labels:
         app.kubernetes.io/name: app-{endpoint_uid}
     spec:
+      securityContext:
+        fsGroup: 1000
       containers:
       - image: {ecr_uri}/callisto-jupyter-base-notebook:latest
         imagePullPolicy: Always
@@ -69,13 +73,13 @@ spec:
             limits:
                 cpu: {int(cpu_core)*1000}m
                 memory: {memory}M
-      #   volumeMounts:
-      #   - mountPath: /home/jovyan
-      #     name: {endpoint_uid}-storage
-      # volumes:
-      # - name: {endpoint_uid}-storage
-      #   persistentVolumeClaim:
-      #     claimName: {endpoint_uid}-pvc
+        volumeMounts:
+        - mountPath: /home/jovyan/work
+          name: {endpoint_uid}-storage
+      volumes:
+      - name: {endpoint_uid}-storage
+        persistentVolumeClaim:
+          claimName: {endpoint_uid}-pvc
       nodeSelector:
         karpenter.sh/nodepool: jupyter-nodepool
 ---
@@ -141,7 +145,7 @@ def delete_resource(user_namespace, endpoint_uid):
         kubectl, "-n", user_namespace, "delete",  "deployment", deployment_name, "--kubeconfig", kubeconfig
     ])
     pvc_result = subprocess.run([
-        kubectl, "delete", "pvc", storage_name, "--kubeconfig", kubeconfig
+        kubectl, "-n", user_namespace, "delete", "pvc", storage_name, "--kubeconfig", kubeconfig
     ])
     result = 0
     if ingress_result.returncode != 0 or service_result.returncode != 0 or deployment_result.returncode != 0 or pvc_result.returncode != 0:

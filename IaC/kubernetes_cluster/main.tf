@@ -194,6 +194,7 @@ resource "helm_release" "karpenter" {
     #     effect: "NoSchedule"
     nodeSelector: {}
     replicas: 1
+    logLevel: debug
     EOT
   ]
 
@@ -292,5 +293,16 @@ resource "null_resource" "create_jupyter_nodepool" {
     EOT
 }
 
-depends_on = [null_resource.update-kubeconfig, module.karpenter]
+depends_on = [null_resource.update-kubeconfig, helm_release.karpenter]
+}
+
+resource "null_resource" "create_ebs_storageclass" {
+  provisioner "local-exec" {
+    when = create
+    command = <<EOT
+    kubectl apply -f ${path.module}/ebs_storageclass.yaml
+    EOT
+}
+
+depends_on = [null_resource.update-kubeconfig, module.eks]
 }
