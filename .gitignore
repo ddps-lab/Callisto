@@ -233,15 +233,5 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-# Frontend
-frontend/*/node_modules/
-frontend/*/.idea/
-frontend/*/.DS_Store/
-frontend/*/dist/
-frontend/*/.env
-frontend/*/.vite/
-# test file
-**/*test*
-
 # env file
 setup.env
