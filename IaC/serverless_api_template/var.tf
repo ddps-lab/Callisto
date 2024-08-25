@@ -48,6 +48,11 @@ variable "db_api_url" {
   default = ""
 }
 
+variable "route53_domain" {
+  type    = string
+  default = ""
+}
+
 variable "region_name" {
   type    = string
   default = ""

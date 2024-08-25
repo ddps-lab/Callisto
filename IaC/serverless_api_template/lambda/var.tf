@@ -10,3 +10,4 @@ variable "attach_cloudwatch_policy" {}
 variable "attach_lambda_policy" {}
 variable "region_name" {}
 variable "db_api_url" {}
+variable "route53_domain" {}

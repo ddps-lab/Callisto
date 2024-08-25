@@ -65,6 +65,7 @@ resource "aws_lambda_function" "lambda" {
       REGION           = var.region_name
       ECR_URI          = var.container_registry
       DB_API_URL       = var.db_api_url
+      ROUTE53_DOMAIN   = var.route53_domain
     }
   }
 }

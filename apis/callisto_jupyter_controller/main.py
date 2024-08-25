@@ -12,6 +12,7 @@ eks_cluster_name = os.getenv('EKS_CLUSTER_NAME')
 region = os.getenv("REGION")
 ecr_uri = os.getenv("ECR_URI")
 db_api_url = os.getenv("DB_API_URL")
+route53_domain = os.getenv("ROUTE53_DOMAIN")
 
 # get eks cluster kubernetes configuration by aws cli
 result_get_kubeconfig = subprocess.run([
@@ -166,9 +167,9 @@ def handler(event, context):
         storage = body.get("storage").lower()
         result = apply_yaml(user_uid, endpoint_uid, cpu_core, memory, storage)
 
-        cmd = "{} get svc -A --kubeconfig {} | grep ingress-nginx | grep LoadBalancer".format(kubectl, kubeconfig)
-        endpoint_url = subprocess.run(cmd, capture_output=True, shell=True).stdout.decode('utf-8').strip().split()[4]
-        print(f"endpoint_url: {endpoint_url}")
+        # cmd = "{} get svc -A --kubeconfig {} | grep ingress-nginx | grep LoadBalancer".format(kubectl, kubeconfig)
+        # endpoint_url = subprocess.run(cmd, capture_output=True, shell=True).stdout.decode('utf-8').strip().split()[4]
+        # print(f"endpoint_url: {endpoint_url}")
         post_data = {
             "uid": endpoint_uid,
             "user": user_uid,
@@ -176,7 +177,7 @@ def handler(event, context):
             "cpu_core": cpu_core,
             "memory": memory,
             "storage": storage,
-            "endpoint": f"http://{endpoint_url}/{endpoint_uid}"
+            "endpoint": f"https://{route53_domain}/{endpoint_uid}"
         }
         response = requests.post(url=f"{db_api_url}/jupyter", json=post_data)
         if result == 0:

@@ -12,4 +12,5 @@ module "lambda" {
   attach_eks_policy        = var.attach_eks_policy
   region_name              = var.region_name
   db_api_url               = var.db_api_url
+  route53_domain           = var.route53_domain
 }
