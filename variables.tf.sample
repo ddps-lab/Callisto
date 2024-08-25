@@ -17,3 +17,8 @@ variable "container_registry" {
   type = string
   default = ""
 }
+
+variable "route53_domain" {
+  type = string
+  default = ""
+}

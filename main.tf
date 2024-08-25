@@ -23,6 +23,7 @@ module "kubernetes_cluster" {
 
 module "deploy_db_api" {
   source         = "./IaC/deploy_db_api"
+  route53_domain = var.route53_domain
   awscli_profile = var.awscli_profile
   region         = var.region
 }
@@ -43,4 +44,14 @@ module "callisto_jupyter_controller" {
   db_api_url           = module.deploy_db_api.api_endpoint_url
 
   depends_on = [module.kubernetes_cluster, module.deploy_db_api]
+}
+
+module "deploy_api" {
+  source         = "./IaC/deploy_api"
+  route53_domain = var.route53_domain
+  region         = var.region
+  jupyter_controller_function_name = module.callisto_jupyter_controller.function_name
+  jupyter_controller_function_arn  = module.callisto_jupyter_controller.function_arn
+
+  depends_on = [ module.callisto_jupyter_controller ]
 }

@@ -182,10 +182,10 @@ def handler(event, context):
         if result == 0:
             return {
                 'statusCode': 200,
-                'body': {
+                'body': json.dumps({
                           "message": "complete create jupyter endpoint",
                           "data": post_data
-                        }
+                        })
             }  
         else:
             return {

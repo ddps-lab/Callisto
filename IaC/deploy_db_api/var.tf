@@ -13,3 +13,8 @@ variable "awscli_profile" {
   type = string
   default = "default"
 }
+
+variable "route53_domain" {
+  type = string
+  default = "callisto.ddps.cloud"
+}
