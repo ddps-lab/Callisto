@@ -274,6 +274,16 @@ resource "helm_release" "nginx-ingress-controller" {
   }
 
   set {
+    name  = "controller.service.annotations.service\\.beta\\.kubernetes\\.io/aws-load-balancer-backend-type"
+    value = "nlb"
+  }
+
+  set {
+    name  = "controller.service.annotations.service\\.beta\\.kubernetes\\.io/aws-load-balancer-backend-scheme"
+    value = "internet-facing"
+  }
+
+  set {
     name  = "controller.service.annotations.service\\.beta\\.kubernetes\\.io/aws-load-balancer-backend-protocol"
     value = "http"
   }
@@ -301,21 +311,6 @@ resource "helm_release" "nginx-ingress-controller" {
   set {
     name  = "controller.service.port.http"
     value = "0"
-  }
-
-  set {
-    name  = "controller.config.use-forwarded-headers"
-    value = "true"
-  }
-
-  set {
-    name  = "controller.config.force-ssl-redirect"
-    value = "true"
-  }
-
-  set {
-    name  = "controller.config.ssl-redirect"
-    value = "true"
   }
 
   depends_on = [module.eks, null_resource.update-kubeconfig, helm_release.eks-external-dns-integration, aws_acm_certificate_validation.certificate_validation]

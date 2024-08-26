@@ -63,7 +63,7 @@ spec:
       - image: {ecr_uri}/callisto-jupyter-base-notebook:latest
         imagePullPolicy: Always
         name: app-{endpoint_uid}
-        command: ["start-notebook.sh", "--NotebookApp.token=''", "--NotebookApp.password=''", "--NotebookApp.base_url=/{endpoint_uid}"]
+        command: ["start-notebook.sh", "--NotebookApp.token=''", "--NotebookApp.password=''", "--NotebookApp.base_url=/{endpoint_uid}", "--NotebookApp.allow_remote_access=True", "--NotebookApp.allow_origin='*'", "--NotebookApp.trust_xheaders=True"]
         ports:
         - containerPort: 8888
         env:
@@ -103,6 +103,13 @@ kind: Ingress
 metadata:
   namespace: {user_namespace}
   name: ingress-{endpoint_uid}
+  annotations:
+    nginx.ingress.kubernetes.io/websocket-services: "jupyter-service"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-buffering: "off"
+    nginx.ingress.kubernetes.io/proxy-request-buffering: "off"
+    nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
 spec:
   ingressClassName: nginx
   rules:
