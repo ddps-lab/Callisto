@@ -11,9 +11,10 @@ aws ecr create-repository --repository-name callisto-jupyter-controller --region
 aws ecr get-login-password --region $REGION --profile $AWSCLI_PROFILE | docker login --username AWS --password-stdin $ECR_URI
 
 # Jupyter Base Notebook
-docker pull jupyter/base-notebook
-docker tag jupyter/base-notebook $ECR_URI/callisto-jupyter-base-notebook
+cd ./callisto_jupyter_base_notebook
+docker build -t $ECR_URI/callisto-jupyter-base-notebook .
 docker push $ECR_URI/callisto-jupyter-base-notebook:latest
+cd -
 
 # Callisto Jupyter Controller
 cd ../apis/callisto_jupyter_controller
