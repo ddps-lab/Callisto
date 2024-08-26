@@ -1,0 +1,24 @@
+variable "region" {
+  type = string
+  default = "ap-northeast-2"
+}
+
+variable "awscli_profile" {
+  type = string
+  default = "default"
+}
+
+variable "main_suffix" {
+  type = string
+  default = ""
+}
+
+variable "container_registry" {
+  type = string
+  default = ""
+}
+
+variable "route53_domain" {
+  type = string
+  default = ""
+}
