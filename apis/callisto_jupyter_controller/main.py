@@ -22,7 +22,7 @@ result_get_kubeconfig = subprocess.run([
     "--kubeconfig", kubeconfig
 ])
 
-def generate_yaml(user_namespace, endpoint_uid, cpu_core, memory, storage):
+def generate_yaml(user_namespace, endpoint_uid, cpu_core, memory, storage, inactivity_time):
     content = f"""---
 apiVersion: v1
 kind: Namespace
@@ -67,6 +67,12 @@ spec:
         ports:
         - containerPort: 8888
         env:
+        - name: NAMESPACE
+          value: {user_namespace}
+        - name: DEPLOYMENT_NAME
+          value: deployment-{endpoint_uid}
+        - name: INACTIVITY_TIME
+          value: {inactivity_time}
         resources:
             requests:
                 cpu: {int(cpu_core)*1000}m
@@ -130,8 +136,8 @@ spec:
 
     return filepath
 
-def apply_yaml(user_uid, endpoint_uid, cpu_core, memory, storage):
-    filename = generate_yaml(user_uid, endpoint_uid, cpu_core, memory, storage)
+def apply_yaml(user_uid, endpoint_uid, cpu_core, memory, storage, inactivity_time):
+    filename = generate_yaml(user_uid, endpoint_uid, cpu_core, memory, storage, inactivity_time)
     result = subprocess.run([
         kubectl, "apply", "-f", filename, "--kubeconfig", kubeconfig
     ])
@@ -170,9 +176,10 @@ def handler(event, context):
     if action == "create":
         cpu_core = body.get("cpu_core").lower()
         memory = body.get("memory")
+        inactivity_time = body.get("inactivity_time")
         endpoint_uid = str(uuid.uuid4())
         storage = body.get("storage").lower()
-        result = apply_yaml(user_uid, endpoint_uid, cpu_core, memory, storage)
+        result = apply_yaml(user_uid, endpoint_uid, cpu_core, memory, storage, inactivity_time)
 
         # cmd = "{} get svc -A --kubeconfig {} | grep ingress-nginx | grep LoadBalancer".format(kubectl, kubeconfig)
         # endpoint_url = subprocess.run(cmd, capture_output=True, shell=True).stdout.decode('utf-8').strip().split()[4]
@@ -184,6 +191,7 @@ def handler(event, context):
             "cpu_core": cpu_core,
             "memory": memory,
             "storage": storage,
+            "inactivity_time": inactivity_time,
             "endpoint": f"https://{route53_domain}/{endpoint_uid}"
         }
         response = requests.post(url=f"{db_api_url}/jupyter", json=post_data)

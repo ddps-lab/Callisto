@@ -40,6 +40,7 @@ export const handler = async (event) => {
             memory: data.memory,
             storage: data.storage,
             endpoint: data.endpoint,
+            inactivity_time: data.inactivity_time,
             cost: 0,
             created_at: new Date().getTime(),
           }
@@ -94,6 +95,7 @@ export const handler = async (event) => {
             storage: data.storage || Item.storage,
             memory: data.memory || Item.memory,
             endpoint: data.endpoint || Item.endpoint,
+            inactivity_time: data.inactivity_time || Item.inactivity_time,
             cost: data.cost || Item.cost,
             updated_at: new Date().getTime(),
           }

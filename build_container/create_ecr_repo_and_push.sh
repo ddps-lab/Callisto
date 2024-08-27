@@ -13,11 +13,11 @@ aws ecr get-login-password --region $REGION --profile $AWSCLI_PROFILE | docker l
 # Jupyter Base Notebook
 cd ./callisto_jupyter_base_notebook
 docker build -t $ECR_URI/callisto-jupyter-base-notebook .
-docker push $ECR_URI/callisto-jupyter-base-notebook:latest
+# docker push $ECR_URI/callisto-jupyter-base-notebook:latest
 cd -
 
 # Callisto Jupyter Controller
 cd ../apis/callisto_jupyter_controller
 docker build -t $ECR_URI/callisto-jupyter-controller .
-docker push $ECR_URI/callisto-jupyter-controller:latest
+# docker push $ECR_URI/callisto-jupyter-controller:latest
 cd -
