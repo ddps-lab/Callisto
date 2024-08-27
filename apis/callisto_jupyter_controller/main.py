@@ -141,12 +141,10 @@ metadata:
   namespace: {user_namespace}
   name: ingress-{endpoint_uid}
   annotations:
-    nginx.ingress.kubernetes.io/websocket-services: "jupyter-service"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
-    nginx.ingress.kubernetes.io/proxy-buffering: "off"
-    nginx.ingress.kubernetes.io/proxy-request-buffering: "off"
-    nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
+    nginx.ingress.kubernetes.io/enable-websocket: "true"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
 spec:
   ingressClassName: nginx
   rules:
@@ -211,6 +209,16 @@ def delete_resource(user_namespace, endpoint_uid):
         print("delete resource returncode != 0")
     return result
 
+def scale_out_resource(user_namespace, endpoint_uid):
+    scale_out_result = subprocess.run([
+        kubectl, "-n", user_namespace, "scale", "deployment", f"deployment-{endpoint_uid}", "--replicas=1", "--kubeconfig", kubeconfig
+    ])
+    result = 0
+    if scale_out_result.returncode != 0:
+        result = 1
+        print("scale out resource returncode != 0")
+    return result
+
 def handler(event, context):
     body = json.loads(event.get("body", "{}"))
     user_uid = body.get("user").lower()
@@ -265,6 +273,19 @@ def handler(event, context):
             return {
                 'statusCode': 500,
                 'body': "error with delete jupyter endpoint"
+            }
+    elif action == "start":
+        endpoint_uid = body.get("uid").lower()        
+        result = scale_out_resource(user_uid, endpoint_uid)
+        if result == 0:
+            return {
+                'statusCode': 200,
+                'body': "complete scale out jupyter deployment"
+            }
+        else:
+            return {
+                'statusCode': 500,
+                'body': "error with scale out jupyter endpoint"
             }
     else:
         return {
