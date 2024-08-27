@@ -30,6 +30,36 @@ metadata:
   name: {user_namespace}
 ---
 apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {endpoint_uid}-sa
+  namespace: {user_namespace}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: {user_namespace}
+  name: {endpoint_uid}-scale-deployment-permission
+rules:
+- apiGroups: ["apps"]
+  resources: ["deployments/scale"]
+  verbs: ["get", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {endpoint_uid}-scale-deployment-permission-binding
+  namespace: {user_namespace}
+subjects:
+- kind: ServiceAccount
+  name: {endpoint_uid}-sa
+  namespace: {user_namespace}
+roleRef:
+  kind: Role
+  name: {endpoint_uid}-scale-deployment-permission  # 앞에서 정의한 Role의 이름
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: {endpoint_uid}-pvc
@@ -48,6 +78,7 @@ metadata:
   namespace: {user_namespace}
   name: deployment-{endpoint_uid}
 spec:
+  serviceAccountName: {endpoint_uid}-sa
   selector:
     matchLabels:
       app.kubernetes.io/name: app-{endpoint_uid}
