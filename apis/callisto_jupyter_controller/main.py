@@ -43,7 +43,7 @@ metadata:
 rules:
 - apiGroups: ["apps"]
   resources: ["deployments/scale"]
-  verbs: ["get", "update"]
+  verbs: ["patch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -78,7 +78,6 @@ metadata:
   namespace: {user_namespace}
   name: deployment-{endpoint_uid}
 spec:
-  serviceAccountName: {endpoint_uid}-sa
   selector:
     matchLabels:
       app.kubernetes.io/name: app-{endpoint_uid}
@@ -88,6 +87,7 @@ spec:
       labels:
         app.kubernetes.io/name: app-{endpoint_uid}
     spec:
+      serviceAccountName: {endpoint_uid}-sa
       securityContext:
         fsGroup: 1000
       containers:
@@ -99,11 +99,11 @@ spec:
         - containerPort: 8888
         env:
         - name: NAMESPACE
-          value: {user_namespace}
+          value: "{user_namespace}"
         - name: DEPLOYMENT_NAME
-          value: deployment-{endpoint_uid}
+          value: "deployment-{endpoint_uid}"
         - name: INACTIVITY_TIME
-          value: {inactivity_time}
+          value: "{inactivity_time}"
         resources:
             requests:
                 cpu: {int(cpu_core)*1000}m
@@ -180,6 +180,10 @@ def delete_resource(user_namespace, endpoint_uid):
     service_name = f"service-{endpoint_uid}"
     ingress_name = f"ingress-{endpoint_uid}"
     storage_name = f"{endpoint_uid}-pvc"
+    role_binding_name = f"{endpoint_uid}-scale-deployment-permission-binding"
+    role_name = f"{endpoint_uid}-scale-deployment-permission"
+    service_account_name = f"{endpoint_uid}-sa"
+
     ingress_result = subprocess.run([
         kubectl, "-n", user_namespace, "delete",  "ingress", ingress_name, "--kubeconfig", kubeconfig
     ])
@@ -192,8 +196,17 @@ def delete_resource(user_namespace, endpoint_uid):
     pvc_result = subprocess.run([
         kubectl, "-n", user_namespace, "delete", "pvc", storage_name, "--kubeconfig", kubeconfig
     ])
+    rbac_role_binding_result = subprocess.run([
+        kubectl, "-n", user_namespace, "delete", "rolebinding", role_binding_name, "--kubeconfig", kubeconfig
+    ])
+    rbac_role_result = subprocess.run([
+        kubectl, "-n", user_namespace, "delete", "role", role_name, "--kubeconfig", kubeconfig
+    ])
+    service_account_result = subprocess.run([
+        kubectl, "-n", user_namespace, "delete", "serviceaccount", service_account_name, "--kubeconfig", kubeconfig
+    ])
     result = 0
-    if ingress_result.returncode != 0 or service_result.returncode != 0 or deployment_result.returncode != 0 or pvc_result.returncode != 0:
+    if ingress_result.returncode != 0 or service_result.returncode != 0 or deployment_result.returncode != 0 or pvc_result.returncode != 0 or rbac_role_binding_result.returncode != 0 or rbac_role_result.returncode != 0 or service_account_result.returncode != 0:
         result = 1
         print("delete resource returncode != 0")
     return result

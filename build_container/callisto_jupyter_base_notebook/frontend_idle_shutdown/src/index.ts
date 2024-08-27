@@ -1,4 +1,5 @@
 import { JupyterFrontEnd, JupyterFrontEndPlugin } from '@jupyterlab/application';
+import { ServerConnection } from '@jupyterlab/services'
 
 // XSRF 토큰을 가져오는 함수
 function getXsrfToken(): string | undefined {
@@ -8,11 +9,11 @@ function getXsrfToken(): string | undefined {
 
 let lastActivityTime = Date.now();
 
-function updateLastActivity() {
+function updateLastActivity(baseUrl: string) {
   lastActivityTime = Date.now();
 
   // 서버에 활동 신호 보내기
-  fetch('/api/backend-idle-shutdown/activity', {
+  fetch(`${baseUrl}api/backend-idle-shutdown/activity`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -35,16 +36,20 @@ function updateLastActivity() {
   });
 }
 
-// 사용자 활동 감지
-window.addEventListener('click', updateLastActivity);
-window.addEventListener('keydown', updateLastActivity);
+function setupActivityListeners(baseUrl: string) {
+  // 사용자 활동 감지
+  window.addEventListener('click', () => updateLastActivity(baseUrl));
+  window.addEventListener('keydown', () => updateLastActivity(baseUrl));
+}
 
 const plugin: JupyterFrontEndPlugin<void> = {
   id: 'frontend_idle_shutdown',
   autoStart: true,
   activate: (app: JupyterFrontEnd) => {
+    const baseUrl = ServerConnection.makeSettings().baseUrl;
     // JupyterLab 활성화 시 초기 활동 신호 전송
-    updateLastActivity();
+    setupActivityListeners(baseUrl)
+    updateLastActivity(baseUrl);
   },
 };
 

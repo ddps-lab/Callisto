@@ -25,5 +25,5 @@ RUN pip install /opt/conda/lib/python3.11/site-packages/backend_idle_shutdown
 # 서버 확장 활성화
 RUN jupyter server extension enable --py backend_idle_shutdown
 
-WORKDIR /home/jovyan
+WORKDIR /home/jovyan/work
 
