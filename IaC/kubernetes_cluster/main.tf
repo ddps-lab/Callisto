@@ -285,7 +285,7 @@ resource "helm_release" "nginx-ingress-controller" {
 
   set {
     name  = "controller.service.annotations.service\\.beta\\.kubernetes\\.io/aws-load-balancer-backend-protocol"
-    value = "http"
+    value = "tcp"
   }
 
   set {
