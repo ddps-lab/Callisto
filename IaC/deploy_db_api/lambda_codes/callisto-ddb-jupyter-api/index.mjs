@@ -33,7 +33,7 @@ export const handler = async (event) => {
         command = {
           TableName,
           Item: {
-            uid: data.uuid,
+            uid: data.uid,
             user: data.user,
             name: data.name,
             cpu_core: data.cpu_core,
