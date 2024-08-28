@@ -22,12 +22,42 @@ result_get_kubeconfig = subprocess.run([
     "--kubeconfig", kubeconfig
 ])
 
-def generate_yaml(user_namespace, endpoint_uid, cpu_core, memory, storage):
+def generate_yaml(user_namespace, endpoint_uid, cpu_core, memory, storage, inactivity_time):
     content = f"""---
 apiVersion: v1
 kind: Namespace
 metadata:
   name: {user_namespace}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {endpoint_uid}-sa
+  namespace: {user_namespace}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: {user_namespace}
+  name: {endpoint_uid}-scale-deployment-permission
+rules:
+- apiGroups: ["apps"]
+  resources: ["deployments/scale"]
+  verbs: ["patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {endpoint_uid}-scale-deployment-permission-binding
+  namespace: {user_namespace}
+subjects:
+- kind: ServiceAccount
+  name: {endpoint_uid}-sa
+  namespace: {user_namespace}
+roleRef:
+  kind: Role
+  name: {endpoint_uid}-scale-deployment-permission  # 앞에서 정의한 Role의 이름
+  apiGroup: rbac.authorization.k8s.io
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -57,16 +87,23 @@ spec:
       labels:
         app.kubernetes.io/name: app-{endpoint_uid}
     spec:
+      serviceAccountName: {endpoint_uid}-sa
       securityContext:
         fsGroup: 1000
       containers:
       - image: {ecr_uri}/callisto-jupyter-base-notebook:latest
         imagePullPolicy: Always
         name: app-{endpoint_uid}
-        command: ["start-notebook.sh", "--NotebookApp.token=''", "--NotebookApp.password=''", "--NotebookApp.base_url=/{endpoint_uid}"]
+        command: ["start-notebook.sh", "--NotebookApp.token=''", "--NotebookApp.password=''", "--NotebookApp.base_url=/{endpoint_uid}", "--NotebookApp.allow_remote_access=True", "--NotebookApp.allow_origin='*'", "--NotebookApp.trust_xheaders=True"]
         ports:
         - containerPort: 8888
         env:
+        - name: NAMESPACE
+          value: "{user_namespace}"
+        - name: DEPLOYMENT_NAME
+          value: "deployment-{endpoint_uid}"
+        - name: INACTIVITY_TIME
+          value: "{inactivity_time}"
         resources:
             requests:
                 cpu: {int(cpu_core)*1000}m
@@ -103,6 +140,11 @@ kind: Ingress
 metadata:
   namespace: {user_namespace}
   name: ingress-{endpoint_uid}
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/enable-websocket: "true"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
 spec:
   ingressClassName: nginx
   rules:
@@ -123,8 +165,8 @@ spec:
 
     return filepath
 
-def apply_yaml(user_uid, endpoint_uid, cpu_core, memory, storage):
-    filename = generate_yaml(user_uid, endpoint_uid, cpu_core, memory, storage)
+def apply_yaml(user_uid, endpoint_uid, cpu_core, memory, storage, inactivity_time):
+    filename = generate_yaml(user_uid, endpoint_uid, cpu_core, memory, storage, inactivity_time)
     result = subprocess.run([
         kubectl, "apply", "-f", filename, "--kubeconfig", kubeconfig
     ])
@@ -136,6 +178,10 @@ def delete_resource(user_namespace, endpoint_uid):
     service_name = f"service-{endpoint_uid}"
     ingress_name = f"ingress-{endpoint_uid}"
     storage_name = f"{endpoint_uid}-pvc"
+    role_binding_name = f"{endpoint_uid}-scale-deployment-permission-binding"
+    role_name = f"{endpoint_uid}-scale-deployment-permission"
+    service_account_name = f"{endpoint_uid}-sa"
+
     ingress_result = subprocess.run([
         kubectl, "-n", user_namespace, "delete",  "ingress", ingress_name, "--kubeconfig", kubeconfig
     ])
@@ -148,10 +194,29 @@ def delete_resource(user_namespace, endpoint_uid):
     pvc_result = subprocess.run([
         kubectl, "-n", user_namespace, "delete", "pvc", storage_name, "--kubeconfig", kubeconfig
     ])
+    rbac_role_binding_result = subprocess.run([
+        kubectl, "-n", user_namespace, "delete", "rolebinding", role_binding_name, "--kubeconfig", kubeconfig
+    ])
+    rbac_role_result = subprocess.run([
+        kubectl, "-n", user_namespace, "delete", "role", role_name, "--kubeconfig", kubeconfig
+    ])
+    service_account_result = subprocess.run([
+        kubectl, "-n", user_namespace, "delete", "serviceaccount", service_account_name, "--kubeconfig", kubeconfig
+    ])
     result = 0
-    if ingress_result.returncode != 0 or service_result.returncode != 0 or deployment_result.returncode != 0 or pvc_result.returncode != 0:
+    if ingress_result.returncode != 0 or service_result.returncode != 0 or deployment_result.returncode != 0 or pvc_result.returncode != 0 or rbac_role_binding_result.returncode != 0 or rbac_role_result.returncode != 0 or service_account_result.returncode != 0:
         result = 1
         print("delete resource returncode != 0")
+    return result
+
+def scale_out_resource(user_namespace, endpoint_uid):
+    scale_out_result = subprocess.run([
+        kubectl, "-n", user_namespace, "scale", "deployment", f"deployment-{endpoint_uid}", "--replicas=1", "--kubeconfig", kubeconfig
+    ])
+    result = 0
+    if scale_out_result.returncode != 0:
+        result = 1
+        print("scale out resource returncode != 0")
     return result
 
 def handler(event, context):
@@ -163,9 +228,10 @@ def handler(event, context):
     if action == "create":
         cpu_core = body.get("cpu_core").lower()
         memory = body.get("memory")
+        inactivity_time = body.get("inactivity_time")
         endpoint_uid = str(uuid.uuid4())
         storage = body.get("storage").lower()
-        result = apply_yaml(user_uid, endpoint_uid, cpu_core, memory, storage)
+        result = apply_yaml(user_uid, endpoint_uid, cpu_core, memory, storage, inactivity_time)
 
         # cmd = "{} get svc -A --kubeconfig {} | grep ingress-nginx | grep LoadBalancer".format(kubectl, kubeconfig)
         # endpoint_url = subprocess.run(cmd, capture_output=True, shell=True).stdout.decode('utf-8').strip().split()[4]
@@ -177,6 +243,7 @@ def handler(event, context):
             "cpu_core": cpu_core,
             "memory": memory,
             "storage": storage,
+            "inactivity_time": inactivity_time,
             "endpoint": f"https://{route53_domain}/{endpoint_uid}"
         }
         response = requests.post(url=f"{db_api_url}/jupyter", json=post_data)
@@ -206,6 +273,19 @@ def handler(event, context):
             return {
                 'statusCode': 500,
                 'body': "error with delete jupyter endpoint"
+            }
+    elif action == "start":
+        endpoint_uid = body.get("uid").lower()        
+        result = scale_out_resource(user_uid, endpoint_uid)
+        if result == 0:
+            return {
+                'statusCode': 200,
+                'body': "complete scale out jupyter deployment"
+            }
+        else:
+            return {
+                'statusCode': 500,
+                'body': "error with scale out jupyter endpoint"
             }
     else:
         return {

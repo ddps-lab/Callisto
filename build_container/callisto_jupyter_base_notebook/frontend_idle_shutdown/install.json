@@ -1,0 +1,5 @@
+{
+  "packageManager": "python",
+  "packageName": "frontend_idle_shutdown",
+  "uninstallInstructions": "Use your Python package manager (pip, conda, etc.) to uninstall the package frontend_idle_shutdown"
+}
