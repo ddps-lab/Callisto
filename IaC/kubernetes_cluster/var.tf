@@ -43,3 +43,5 @@ variable "route53_domain" {
   type = string
   default = "callisto.ddps.cloud"
 }
+
+variable "ami_id" {}

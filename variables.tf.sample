@@ -22,3 +22,9 @@ variable "route53_domain" {
   type = string
   default = ""
 }
+
+# AL2023 EKS Optimized AMI
+variable "ami_id" {
+  type = string
+  default = "ami-04f3fb3944c844ddf"
+}

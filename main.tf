@@ -18,6 +18,7 @@ module "kubernetes_cluster" {
   source         = "./IaC/kubernetes_cluster"
   main_suffix    = var.main_suffix
   awscli_profile = var.awscli_profile
+  ami_id         = var.ami_id
   region         = var.region
 }
 
