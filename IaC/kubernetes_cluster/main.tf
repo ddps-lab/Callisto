@@ -219,7 +219,7 @@ resource "helm_release" "eks-external-dns-integration" {
   }
 
   set {
-    name = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
+    name  = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
     value = module.external_dns_irsa_role.iam_role_arn
   }
 
@@ -437,6 +437,7 @@ resource "null_resource" "create_jupyter_nodepool" {
     echo "${templatefile("${path.module}/templates/jupyter_nodepool.yaml.tpl", {
     eks_cluster_name = module.eks.cluster_name
     node_role_name   = module.karpenter.node_iam_role_name
+    ami_id           = var.ami_id
 })}" > ${path.module}/jupyter_nodepool.yaml
     kubectl apply -f ${path.module}/jupyter_nodepool.yaml
     EOT

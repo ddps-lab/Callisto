@@ -32,8 +32,9 @@ kind: EC2NodeClass
 metadata:
   name: jupyter-nodeclass
 spec:
+  amiFamily: AL2023
   amiSelectorTerms:
-    - alias: bottlerocket@v1.20.4
+    - id: ${ami_id}
   role: "${node_role_name}"
   subnetSelectorTerms:
     - tags:
