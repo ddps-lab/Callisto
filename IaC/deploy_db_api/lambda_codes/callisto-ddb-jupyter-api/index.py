@@ -11,25 +11,25 @@ ddb = boto3.resource("dynamodb")
 table = ddb.Table(table_name)
 
 def create(auth_sub, payload):
-    necessary_keys = ["sub", "name", "cpu", "memory", "disk"]
+    necessary_keys = ["name", "cpu", "memory", "disk"]
     if not all(key in payload for key in necessary_keys):
         return {
             "statusCode": 400,
             "body": json.dumps({
-                "message": "Missing necessary keys. 4 keys(sub, name, cpu, memory, disk) are required."
+                "message": "Missing necessary keys. 4 keys(name, cpu, memory, disk) are required."
             })
         }
-    if payload["sub"] != auth_sub:
-        return {
-            "statusCode": 403,
-            "body": json.dumps({
-                "message": "Forbidden"
-            })
-        }
+    # if payload["sub"] != auth_sub:
+    #     return {
+    #         "statusCode": 403,
+    #         "body": json.dumps({
+    #             "message": "Forbidden"
+    #         })
+    #     }
     created_at = int(datetime.datetime.now().timestamp() * 1000)
-    uid = f"{payload['sub']}@{created_at}"
+    uid = f"{auth_sub}@{created_at}"
     jupyter = {
-        "sub": payload["sub"],
+        "sub": auth_sub,
         "created_at": created_at,
         "name": payload["name"],
         "cpu": payload["cpu"],
@@ -38,6 +38,7 @@ def create(auth_sub, payload):
         "disk": payload["disk"],
         "status": "pending",
         "endpoint_url": None,
+        "inactivity_time": 15,
     }
     try:
         table.put_item(Item=jupyter);
@@ -58,8 +59,7 @@ def create(auth_sub, payload):
             })
         }
 
-def read(auth_sub, payload):
-    uid = payload.get("uid")
+def read(auth_sub, uid):
     sub, created_at = uid.split("@", 1) if "@" in uid else (uid, None)
     if not sub or not created_at:
         return {
@@ -117,7 +117,7 @@ def read_all(auth_sub):
         }
 
 def update(auth_sub, uid, payload):
-    changeable_keys = ["status", "endpoint_url"]
+    changeable_keys = ["name", "cpu", "memory", "disk", "status"]
     sub, created_at = uid.split("@", 1) if "@" in uid else (uid, None)
     if not sub or not created_at:
         return {
@@ -146,13 +146,14 @@ def update(auth_sub, uid, payload):
         jupyter = response["Item"]
         for key in changeable_keys:
             if key in payload and payload[key]:
+                # if status, cpu, memory, disk is changed 
                 jupyter[key] = payload[key]
         table.put_item(Item=jupyter)
         return {
             "statusCode": 200,
             "body": json.dumps({
                 "message": "Jupyter updated",
-                "jupyter": jupyter
+                "jupyter": json.dumps(jupyter, default=lambda o: int(o) if isinstance(o, Decimal) and o % 1 == 0 else float(o))
             })
         }
     except Exception as e:
@@ -164,7 +165,6 @@ def update(auth_sub, uid, payload):
                 "error": str(e)
             })
         }
-
 
 def delete(auth_sub, uid):
     sub, created_at = uid.split("@", 1) if "@" in uid else (uid, None)
@@ -198,7 +198,7 @@ def delete(auth_sub, uid):
             "statusCode": 200,
             "body": json.dumps({
                 "message": "Jupyter deleted",
-                "jupyter": jupyter
+                "jupyter": json.dumps(jupyter, default=lambda o: int(o) if isinstance(o, Decimal) and o % 1 == 0 else float(o))
             })
         }
     except Exception as e:
@@ -231,13 +231,13 @@ def lambda_handler(event, context):
             res.update(create(auth_sub, req_body))
         elif method == "GET":
             if event.get("pathParameters"):
-                res.update(read(auth_sub, event["pathParameters"])) # uid
+                res.update(read(auth_sub, event["pathParameters"].get("uid"))) # uid
             else:
                 res.update(read_all(auth_sub))
         elif method == "PATCH":
-            res.update(update(auth_sub, event["pathParameters"], req_body))
+            res.update(update(auth_sub, event["pathParameters"].get("uid"), req_body))
         elif method == "DELETE":
-            res.update(delete(auth_sub, event["pathParameters"])) # uid
+            res.update(delete(auth_sub, event["pathParameters"].get("uid"))) # uid
         else:
             res.update({
                 "statusCode": 405,
