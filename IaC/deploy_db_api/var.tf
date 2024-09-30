@@ -18,3 +18,6 @@ variable "route53_domain" {
   type = string
   default = "callisto.ddps.cloud"
 }
+
+variable "environment" {}
+variable "random_hex" {}

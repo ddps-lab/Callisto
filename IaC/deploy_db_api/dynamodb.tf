@@ -1,5 +1,5 @@
 resource "aws_dynamodb_table" "callisto-users" {
-    name = "callisto-users"
+    name = "callisto-users-${var.environment}-${var.random_hex}"
     billing_mode = "PAY_PER_REQUEST"
 
     attribute {
@@ -11,7 +11,7 @@ resource "aws_dynamodb_table" "callisto-users" {
 }
 
 resource "aws_dynamodb_table" "callisto-jupyter" {
-    name = "callisto-jupyter"
+    name = "callisto-jupyter-${var.environment}-${var.random_hex}"
     billing_mode = "PAY_PER_REQUEST"
 
     attribute {

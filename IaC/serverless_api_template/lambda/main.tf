@@ -1,11 +1,5 @@
-provider "random" {}
-
-resource "random_id" "random_string" {
-  byte_length = 4
-}
-
 resource "aws_iam_role" "lambda-role" {
-  name = "${var.prefix}-aws-lambda-role-${random_id.random_string.hex}"
+  name = "${var.function_name}-aws-lambda-role-${var.environment}-${var.random_hex}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -51,7 +45,7 @@ resource "aws_iam_role_policy_attachment" "lambda_policy" {
 }
 
 resource "aws_lambda_function" "lambda" {
-  function_name = "${var.prefix}-aws-lambda-${random_id.random_string.hex}"
+  function_name = "${var.function_name}-${var.environment}-${var.random_hex}"
   package_type  = "Image"
   architectures = ["x86_64"]
   image_uri     = "${var.container_registry}/${var.container_repository}:${var.container_image_tag}"
@@ -62,7 +56,7 @@ resource "aws_lambda_function" "lambda" {
   environment {
     variables = {
       EKS_CLUSTER_NAME = var.eks_cluster_name
-      REGION           = var.region_name
+      REGION           = var.region
       ECR_URI          = var.container_registry
       DB_API_URL       = var.db_api_url
       ROUTE53_DOMAIN   = var.route53_domain
