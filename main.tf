@@ -27,12 +27,14 @@ module "deploy_db_api" {
 }
 
 module "frontend" {
-  source         = "./IaC/frontend"
-  region         = var.region
-  environment    = var.environment
-  random_hex     = random_id.random_string.hex
-  awscli_profile = var.awscli_profile
-  db_api_url     = module.deploy_db_api.api_endpoint_domain_url
+  source                               = "./IaC/frontend"
+  region                               = var.region
+  environment                          = var.environment
+  random_hex                           = random_id.random_string.hex
+  awscli_profile                       = var.awscli_profile
+  db_api_url                           = module.deploy_db_api.api_endpoint_domain_url
+  callisto_cognito_user_pool_id        = module.deploy_db_api.callisto_cognito_user_pool_id
+  callisto_cognito_user_pool_client_id = module.deploy_db_api.callisto_cognito_user_pool_client_id
 
   depends_on = [module.deploy_db_api]
 }
