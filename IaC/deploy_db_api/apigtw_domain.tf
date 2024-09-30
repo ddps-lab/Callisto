@@ -31,9 +31,7 @@ resource "aws_acm_certificate_validation" "certificate_validation" {
 
 resource "aws_api_gateway_domain_name" "api_domain_name" {
   domain_name     = "db.api.${var.route53_domain}"
-  certificate_arn = aws_acm_certificate.certificate.arn
-
-  depends_on = [aws_acm_certificate_validation.certificate_validation]
+  certificate_arn = aws_acm_certificate_validation.certificate_validation.certificate_arn
 }
 
 resource "aws_route53_record" "route53_record" {
