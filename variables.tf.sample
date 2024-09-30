@@ -36,7 +36,7 @@ variable "ami_id" {
 
 variable "jupyter_api_container_repository" {
   type    = string
-  default = "callisto-jupyter-api"
+  default = "callisto-ddb-jupyter-api"
 }
 
 variable "jupyter_api_image_tag" {
