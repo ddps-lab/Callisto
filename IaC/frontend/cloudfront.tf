@@ -3,7 +3,7 @@ resource "aws_acm_certificate" "web_cert" {
   domain_name       = var.route53_domain
   validation_method = "DNS"
 
-  subject_alternative_names = ["${var.domain_name}"]
+  subject_alternative_names = ["${var.route53_domain}"]
 
   lifecycle {
     create_before_destroy = true
@@ -21,7 +21,7 @@ resource "aws_route53_record" "cert_validation" {
     }
   }
 
-  zone_id = aws_route53_zone.primary.zone_id
+  zone_id = data.aws_route53_zone.route53_zone.zone_id
   name    = each.value.name
   type    = each.value.type
   records = [each.value.value]
@@ -35,13 +35,13 @@ resource "aws_acm_certificate_validation" "cert_validation" {
 }
 
 resource "aws_cloudfront_origin_access_identity" "oai" {
-  comment = "OAI for accessing ${aws_s3_bucket.bucket.id}"
+  comment = "OAI for accessing ${aws_s3_bucket.callisto_web_bucket.bucket}"
 }
 
 resource "aws_cloudfront_distribution" "distribution" {
   origin {
     domain_name = aws_s3_bucket.callisto_web_bucket.bucket_regional_domain_name
-    origin_id   = "S3-${aws_s3_bucket.bucket.id}"
+    origin_id   = "S3-${aws_s3_bucket.callisto_web_bucket.id}"
     s3_origin_config {
       origin_access_identity = aws_cloudfront_origin_access_identity.oai.cloudfront_access_identity_path
     }
@@ -56,7 +56,7 @@ resource "aws_cloudfront_distribution" "distribution" {
   default_cache_behavior {
     allowed_methods  = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
     cached_methods   = ["GET", "HEAD"]
-    target_origin_id = "S3-${aws_s3_bucket.bucket.id}"
+    target_origin_id = "S3-${aws_s3_bucket.callisto_web_bucket.id}"
 
     forwarded_values {
       query_string = false

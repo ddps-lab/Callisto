@@ -44,6 +44,9 @@ module "frontend" {
   db_api_url                           = module.deploy_db_api.api_endpoint_domain_url
   callisto_cognito_user_pool_id        = module.deploy_db_api.callisto_cognito_user_pool_id
   callisto_cognito_user_pool_client_id = module.deploy_db_api.callisto_cognito_user_pool_client_id
-
+  providers = {
+    aws          = aws
+    aws.virginia = aws.virginia
+  }
   depends_on = [module.deploy_db_api]
 }
