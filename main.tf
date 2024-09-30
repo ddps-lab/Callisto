@@ -43,7 +43,6 @@ module "frontend" {
   random_string                        = random_string.random_string.result
   awscli_profile                       = var.awscli_profile
   route53_domain                       = var.route53_domain
-  # db_api_url                           = module.deploy_db_api.api_endpoint_domain_url
   callisto_cognito_user_pool_id        = module.deploy_db_api.callisto_cognito_user_pool_id
   callisto_cognito_user_pool_client_id = module.deploy_db_api.callisto_cognito_user_pool_client_id
   route53_data                         = data.aws_route53_zone.route53_zone
