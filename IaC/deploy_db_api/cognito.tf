@@ -2,7 +2,8 @@ resource "aws_cognito_user_pool" "callisto_user_pool" {
   name                = "callisto-user-pool-${var.environment}-${var.random_hex}"
   username_attributes = ["email"]
   mfa_configuration   = "OFF"
-
+  auto_verified_attributes = ["email"]
+  
   schema {
     attribute_data_type = "String"
     name                = "email"
@@ -33,6 +34,11 @@ resource "aws_cognito_user_pool" "callisto_user_pool" {
 
   admin_create_user_config {
     allow_admin_create_user_only = false
+  }
+
+  verification_message_template {
+    email_message = "Your verification code is {####}."
+    email_subject = "[Callisto] Verify your email address"
   }
 }
 
