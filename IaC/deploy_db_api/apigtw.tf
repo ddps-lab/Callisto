@@ -36,7 +36,7 @@ resource "aws_apigatewayv2_authorizer" "callisto_cognito_authorizer" {
 
   jwt_configuration {
     audience = [aws_cognito_user_pool_client.callisto_user_pool_client.id]
-    issuer   = aws_cognito_user_pool.callisto_user_pool.endpoint
+    issuer   = "https://cognito-idp.${var.region}.amazonaws.com/${aws_cognito_user_pool.callisto_user_pool.id}"
   }
 }
 
