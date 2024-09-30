@@ -1,8 +1,7 @@
-variable "api_list" {
-  type = list(string)
-  default = ["callisto-ddb-jupyter-api",
-    "callisto-ddb-users-api"]
-  }
+# variable "api_list" {
+#   type = list(string)
+#   default = ["callisto-ddb-jupyter-api"]
+# }
 
 variable "region" {
   type = string
@@ -21,3 +20,7 @@ variable "route53_domain" {
 
 variable "environment" {}
 variable "random_hex" {}
+variable "eks_cluster_name" {}
+variable "container_registry" {}
+variable "jupyter_api_container_repository" {}
+variable "jupyter_api_image_tag" {} 

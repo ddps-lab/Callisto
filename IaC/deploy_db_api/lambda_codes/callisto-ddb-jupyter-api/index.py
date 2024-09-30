@@ -3,12 +3,40 @@ from decimal import Decimal
 import json
 import boto3
 import os
+import subprocess
+from kubernetes import client, config, utils
+from jinja2 import Environment, FileSystemLoader
+
+eks_cluster_name = os.getenv('EKS_CLUSTER_NAME')
+region = os.getenv("REGION")
+ecr_uri = os.getenv("ECR_URI")
+db_api_url = os.getenv("DB_API_URL")
+route53_domain = os.getenv("ROUTE53_DOMAIN")
+
+# update .kubeconfig file
+subprocess.run([
+    "aws", "eks", "update-kubeconfig",
+    "--name", eks_cluster_name,
+    "--region", region,
+    "--kubeconfig", '/tmp/kubeconfig'
+])
+config.load_kube_config(config_file='/tmp/kubeconfig')
+v1 = client.CoreV1Api()
+apps_v1 = client.AppsV1Api()
+netwokring_v1 = client.NetworkingV1Api()
+rbac_v1 = client.RbacAuthorizationV1Api()
+api_client = client.ApiClient()
 
 TABLE_NAME = os.environ.get('TABLE_NAME', "callisto_jupyter")
 
 CLIENT = boto3.client("dynamodb")
 DDB = boto3.resource("dynamodb")
 TABLE = DDB.Table(TABLE_NAME)
+
+def render_template(template_file, **kwargs):
+    env = Environment(loader=FileSystemLoader("."))
+    template = env.get_template(template_file)
+    return template.render(**kwargs)
 
 def create(auth_sub, payload):
     necessary_keys = ["name", "cpu", "memory", "disk"]
@@ -41,7 +69,27 @@ def create(auth_sub, payload):
         "inactivity_time": 15,
     }
     try:
-        TABLE.put_item(Item=jupyter);
+        variables = {
+            'user_namespace': auth_sub,
+            'endpoint_uid': f"{auth_sub}-{created_at}",
+            'cpu_core': int(payload["cpu"]) * 1000,
+            'memory': int(payload["memory"]) * 1024,
+            'storage': payload["disk"],
+            'inactivity_time': 15
+        }
+        rendered_yaml = render_template("jupyter_template.yaml", **variables)
+        utils.create_from_yaml(api_client, rendered_yaml, namespace=uid)
+    except Exception as e:
+        print(e)
+        return {
+            "statusCode": 500,
+            "body": json.dumps({
+                "message": "Internal server error (Kubernetes Error)",
+                "error": str(e)
+            })
+        }
+    try:
+        TABLE.put_item(Item=jupyter)
         return {
             "statusCode": 201,
             "body": json.dumps({
@@ -134,6 +182,31 @@ def update(auth_sub, uid, payload):
             })
         }
     try:
+        if "status" in payload:
+            if payload["status"] == "start":
+                apps_v1.patch_namespaced_deployment_scale(name=f"deployment-{sub}-{created_at}", namespace=sub, body={"spec": {"replicas": 1}})
+        elif "cpu" in payload and "memory" in payload and "disk" in payload:
+            variables = {
+                'user_namespace': sub,
+                'endpoint_uid': f"{sub}-{created_at}",
+                'cpu_core': int(payload["cpu"]) * 1000,
+                'memory': int(payload["memory"]) * 1024,
+                'storage': payload["disk"],
+                'inactivity_time': 15
+            }
+            rendered_yaml = render_template("jupyter_template.yaml", **variables)
+            utils.create_from_yaml(api_client, rendered_yaml, namespace=uid)
+
+    except Exception as e:
+        print(e)
+        return {
+            "statusCode": 500,
+            "body": json.dumps({
+                "message": "Internal server error (Kubernetes Error)",
+                "error": str(e)
+            })
+        }
+    try:
         response = TABLE.get_item(Key={"sub": sub, "created_at": int(created_at)})
         if "Item" not in response:
             return {
@@ -161,7 +234,7 @@ def update(auth_sub, uid, payload):
         return {
             "statusCode": 500,
             "body": json.dumps({
-                "message": "Internal server error",
+                "message": "Internal server error (DB Error)",
                 "error": str(e)
             })
         }
@@ -181,6 +254,23 @@ def delete(auth_sub, uid):
             "body": json.dumps({
                 "message": "Forbidden"
             })
+        }
+    try:
+        v1.delete_namespaced_service(f"service-{sub}-{created_at}", sub)
+        apps_v1.delete_namespaced_deployment(f"deployment-{sub}-{created_at}", sub)
+        v1.delete_namespaced_persistent_volume_claim(f"{sub}-{created_at}-pvc", sub)
+        netwokring_v1.delete_namespaced_ingress(f"ingress-{sub}-{created_at}", sub)
+        v1.delete_namespaced_service_account(f"{sub}-{created_at}-sa", sub)
+        rbac_v1.delete_namespaced_role(f"{sub}-{created_at}-scale-deployment-permission", sub)
+        rbac_v1.delete_namespaced_role_binding(f"{sub}-{created_at}-scale-deployment-permission-binding", sub)
+    except Exception as e:
+        print(e)
+        return {
+            "statusCode": 500,
+            "body": json.dumps({
+                "message": "Internal server error (Kubernetes Error)",
+                "error": str(e)
+            })   
         }
     try:
         response = TABLE.get_item(Key={"sub": sub, "created_at": int(created_at)})
@@ -206,7 +296,7 @@ def delete(auth_sub, uid):
         return {
             "statusCode": 500,
             "body": json.dumps({
-                "message": "Internal server error",
+                "message": "Internal server error (DB Error)",
                 "error": str(e)
             })
         }
