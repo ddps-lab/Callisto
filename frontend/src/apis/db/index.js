@@ -2,6 +2,7 @@ import axios from 'axios';
 
 const instance = (idToken) =>
   axios.create({
+    withCredentials: true,
     baseURL: import.meta.env.VITE_DB_API_URL,
     headers: {
       'Content-Type': 'application/json',

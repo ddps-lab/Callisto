@@ -22,3 +22,4 @@ variable "cluster_version" {}
 variable "route53_domain" {}
 variable "random_string" {}
 variable "ami_id" {}
+variable "route53_data" {}

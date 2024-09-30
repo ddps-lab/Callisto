@@ -20,7 +20,7 @@ resource "aws_route53_record" "validation_record" {
   records         = [each.value.record]
   ttl             = 60
   type            = each.value.type
-  zone_id         = data.aws_route53_zone.route53_zone.zone_id
+  zone_id         = var.route53_data.zone_id
 }
 
 resource "aws_acm_certificate_validation" "certificate_validation" {
@@ -37,7 +37,7 @@ resource "aws_api_gateway_domain_name" "api_domain_name" {
 resource "aws_route53_record" "route53_record" {
   name    = aws_api_gateway_domain_name.api_domain_name.domain_name
   type    = "A"
-  zone_id = data.aws_route53_zone.route53_zone.zone_id
+  zone_id = var.route53_data.zone_id
 
   alias {
     name                   = aws_api_gateway_domain_name.api_domain_name.cloudfront_domain_name

@@ -21,7 +21,7 @@ resource "aws_route53_record" "cert_validation" {
     }
   }
 
-  zone_id = data.aws_route53_zone.route53_zone.zone_id
+  zone_id = var.route53_data.zone_id
   name    = each.value.name
   type    = each.value.type
   records = [each.value.value]
@@ -163,7 +163,7 @@ resource "aws_cloudfront_response_headers_policy" "cors_policy" {
 
 
 resource "aws_route53_record" "root" {
-  zone_id = data.aws_route53_zone.route53_zone.zone_id
+  zone_id = var.route53_data.zone_id
   name    = ""
   type    = "A"
 
