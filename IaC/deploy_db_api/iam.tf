@@ -58,13 +58,13 @@ resource "aws_iam_role_policy_attachment" "ssm_policy" {
 
 resource "aws_eks_access_entry" "eks-access-entry" {
   cluster_name  = var.eks_cluster_name
-  principal_arn = aws_iam_role.lambda_api_role.name
+  principal_arn = aws_iam_role.lambda_api_role.arn
 }
 
 resource "aws_eks_access_policy_association" "eks-access-policy" {
   cluster_name  = var.eks_cluster_name
   policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
-  principal_arn = aws_iam_role.lambda_api_role.name
+  principal_arn = aws_iam_role.lambda_api_role.arn
 
   access_scope {
     type = "cluster"
