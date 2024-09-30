@@ -2,8 +2,8 @@ resource "aws_s3_bucket" "callisto_web_bucket" {
     bucket = "callisto-web-${var.environment}-${var.random_hex}"
 }
 
-resource "aws_s3_bucket_public_access_block" "sskai-s3-web-bucket-public-conf" {
-  bucket = aws_s3_bucket.sskai-s3-web-bucket.bucket
+resource "aws_s3_bucket_public_access_block" "callisto-s3-web-bucket-public-conf" {
+  bucket = aws_s3_bucket.callisto_web_bucket.bucket
 
   block_public_acls       = false
   block_public_policy     = false
@@ -11,8 +11,8 @@ resource "aws_s3_bucket_public_access_block" "sskai-s3-web-bucket-public-conf" {
   restrict_public_buckets = false
 }
 
-resource "aws_s3_bucket_website_configuration" "sskai-s3-web-bucket-web-conf" {
-  bucket = aws_s3_bucket.sskai-s3-web-bucket.bucket
+resource "aws_s3_bucket_website_configuration" "callisto-s3-web-bucket-web-conf" {
+  bucket = aws_s3_bucket.callisto_web_bucket.bucket
   index_document {
     suffix = "index.html"
   }
@@ -22,8 +22,8 @@ resource "aws_s3_bucket_website_configuration" "sskai-s3-web-bucket-web-conf" {
   }
 }
 
-resource "aws_s3_bucket_policy" "sskai-s3-web-bucket-policy" {
-  bucket = aws_s3_bucket.sskai-s3-web-bucket.bucket
+resource "aws_s3_bucket_policy" "callisto-s3-web-bucket-policy" {
+  bucket = aws_s3_bucket.callisto_web_bucket.bucket
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
@@ -31,7 +31,7 @@ resource "aws_s3_bucket_policy" "sskai-s3-web-bucket-policy" {
         Effect = "Allow",
         Principal = "*",
         Action = "s3:GetObject",
-        Resource = "${aws_s3_bucket.sskai-s3-web-bucket.arn}/*"
+        Resource = "${aws_s3_bucket.callisto_web_bucket.arn}/*"
       }
     ]
   })

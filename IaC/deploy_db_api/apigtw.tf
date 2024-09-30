@@ -1,67 +1,67 @@
 resource "aws_apigatewayv2_api" "callisto_db_api" {
-  name = "Callisto DB REST-API-${var.environment}-${var.random_hex}"
+  name          = "Callisto DB REST-API-${var.environment}-${var.random_hex}"
   protocol_type = "HTTP"
   cors_configuration {
-    allow_methods = ["*"]
     allow_origins = ["*"]
-    allow_headers = ["*"]
+    allow_headers = ["id-token", "Content-Type"]
+    allow_methods = ["OPTIONS", "GET", "POST", "PUT", "DELETE", "PATCH", "ANY"]
+    max_age       = 3600
   }
 }
 
 ### lambda permissions
 resource "aws_lambda_permission" "callisto_ddb_jupyter_api_permission" {
-  statement_id = "AllowAPIGatewayInvoke"
-  action = "lambda:InvokeFunction"
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.callisto-ddb-jupyter-api.function_name
-  principal = "apigateway.amazonaws.com"
-  source_arn = "${aws_apigatewayv2_api.callisto_db_api.execution_arn}/*/*"
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.callisto_db_api.execution_arn}/*/*"
 }
 
 ### integrations
 resource "aws_apigatewayv2_integration" "jupyter_integration" {
-    api_id = aws_apigatewayv2_api.callisto_db_api.id
-    integration_type = "AWS_PROXY"
-    integration_method = "POST"
-    integration_uri = "arn:aws:apigateway:${var.region}:lambda:path/2015-03-31/functions/${aws_lambda_function.callisto-ddb-jupyter-api.arn}/invocations"
-    payload_format_version = "2.0"
+  api_id                 = aws_apigatewayv2_api.callisto_db_api.id
+  integration_type       = "AWS_PROXY"
+  integration_method     = "POST"
+  integration_uri        = "arn:aws:apigateway:${var.region}:lambda:path/2015-03-31/functions/${aws_lambda_function.callisto-ddb-jupyter-api.arn}/invocations"
+  payload_format_version = "2.0"
+}
+
+### authorizer (cognito)
+resource "aws_apigatewayv2_authorizer" "callisto_cognito_authorizer" {
+  api_id           = aws_apigatewayv2_api.callisto_db_api.id
+  authorizer_type  = "JWT"
+  identity_sources = ["$request.header.id-token"]
+  name             = "callisto-cognito-authorizer"
+
+  jwt_configuration {
+    audience = [aws_cognito_user_pool_client.callisto_user_pool_client.id]
+    issuer   = aws_cognito_user_pool.callisto_user_pool.endpoint
+  }
 }
 
 ### routes
 # /jupyter
 resource "aws_apigatewayv2_route" "jupyter_post_route" {
-  api_id = aws_apigatewayv2_api.callisto_db_api.id
-  route_key = "POST /jupyter"
-  target = "integrations/${aws_apigatewayv2_integration.jupyter_integration.id}"
+  api_id             = aws_apigatewayv2_api.callisto_db_api.id
+  route_key          = "ANY /jupyter"
+  authorization_type = "JWT"
+  authorizer_id      = aws_apigatewayv2_authorizer.callisto_cognito_authorizer.id
+  target             = "integrations/${aws_apigatewayv2_integration.jupyter_integration.id}"
 }
 
-resource "aws_apigatewayv2_route" "jupyter_get_route" {
-  api_id = aws_apigatewayv2_api.callisto_db_api.id
-  route_key = "GET /jupyter"
-  target = "integrations/${aws_apigatewayv2_integration.jupyter_integration.id}"
-}
-
-resource "aws_apigatewayv2_route" "jupyter_put_id_route" {
-  api_id = aws_apigatewayv2_api.callisto_db_api.id
-  route_key = "PUT /jupyter/{id}"
-  target = "integrations/${aws_apigatewayv2_integration.jupyter_integration.id}"
-}
-
-resource "aws_apigatewayv2_route" "jupyter_get_id_route" {
-  api_id = aws_apigatewayv2_api.callisto_db_api.id
-  route_key = "GET /jupyter/{id}"
-  target = "integrations/${aws_apigatewayv2_integration.jupyter_integration.id}"
-}
-
-resource "aws_apigatewayv2_route" "jupyter_delete_id_route" {
-  api_id = aws_apigatewayv2_api.callisto_db_api.id
-  route_key = "DELETE /jupyter/{id}"
-  target = "integrations/${aws_apigatewayv2_integration.jupyter_integration.id}"
+resource "aws_apigatewayv2_route" "jupyter_post_route" {
+  api_id             = aws_apigatewayv2_api.callisto_db_api.id
+  route_key          = "ANY /jupyter/{uid}"
+  authorization_type = "JWT"
+  authorizer_id      = aws_apigatewayv2_authorizer.callisto_cognito_authorizer.id
+  target             = "integrations/${aws_apigatewayv2_integration.jupyter_integration.id}"
 }
 
 ### stage deploy
 resource "aws_apigatewayv2_stage" "apigtw_stage" {
-  api_id = aws_apigatewayv2_api.callisto_db_api.id
-  name = "callisto-api-${var.environment}-${var.random_hex}"
+  api_id      = aws_apigatewayv2_api.callisto_db_api.id
+  name        = "callisto-api-${var.environment}-${var.random_hex}"
   auto_deploy = true
 }
 
@@ -89,7 +89,7 @@ resource "aws_route53_record" "validation_record" {
 }
 
 resource "aws_acm_certificate_validation" "certificate_validation" {
-  certificate_arn = aws_acm_certificate.certificate.arn
+  certificate_arn         = aws_acm_certificate.certificate.arn
   validation_record_fqdns = [for record in aws_route53_record.validation_record : record.fqdn]
 }
 
@@ -102,7 +102,7 @@ resource "aws_apigatewayv2_domain_name" "api_domain_name" {
     security_policy = "TLS_1_2"
   }
 
-  depends_on = [ aws_acm_certificate_validation.certificate_validation ]
+  depends_on = [aws_acm_certificate_validation.certificate_validation]
 }
 
 resource "aws_route53_record" "route53_record" {
@@ -118,7 +118,7 @@ resource "aws_route53_record" "route53_record" {
 }
 
 resource "aws_apigatewayv2_api_mapping" "api_mapping" {
-  api_id = aws_apigatewayv2_api.callisto_db_api.id
+  api_id      = aws_apigatewayv2_api.callisto_db_api.id
   domain_name = aws_apigatewayv2_domain_name.api_domain_name.id
-  stage = aws_apigatewayv2_stage.apigtw_stage.id
+  stage       = aws_apigatewayv2_stage.apigtw_stage.id
 }

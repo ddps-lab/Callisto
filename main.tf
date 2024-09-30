@@ -11,17 +11,28 @@ module "kubernetes_cluster" {
 }
 
 module "deploy_db_api" {
-  source         = "./IaC/deploy_db_api"
-  route53_domain = var.route53_domain
-  awscli_profile = var.awscli_profile
+  source                           = "./IaC/deploy_db_api"
+  route53_domain                   = var.route53_domain
+  awscli_profile                   = var.awscli_profile
+  region                           = var.region
+  environment                      = var.environment
+  random_hex                       = random_id.random_string.hex
+  eks_cluster_name                 = module.kubernetes_cluster.eks_cluster_name
+  container_registry               = var.container_registry
+  jupyter_ddb_table_name           = module.deploy_db_api.callisto-jupyter_table_name
+  jupyter_api_container_repository = var.jupyter_api_container_repository
+  jupyter_api_image_tag            = var.jupyter_api_image_tag
+
+  depends_on = [module.kubernetes_cluster]
+}
+
+module "frontend" {
+  source         = "./IaC/frontend"
   region         = var.region
   environment    = var.environment
   random_hex     = random_id.random_string.hex
-  eks_cluster_name = module.kubernetes_cluster.eks_cluster_name
-  container_registry = var.container_registry
-  jupyter_ddb_table_name = module.deploy_db_api.callisto-jupyter_table_name
-  jupyter_api_container_repository = var.jupyter_api_container_repository
-  jupyter_api_image_tag = var.jupyter_api_image_tag
+  awscli_profile = var.awscli_profile
+  db_api_url     = module.deploy_db_api.db_api_url
 
-  depends_on = [module.kubernetes_cluster]
+  depends_on = [module.deploy_db_api]
 }
