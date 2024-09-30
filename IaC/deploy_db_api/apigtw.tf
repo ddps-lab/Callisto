@@ -12,9 +12,16 @@ resource "aws_lambda_permission" "callisto_ddb_jupyter_api_permission" {
 }
 
 ### /jupyter, /jupyter/{uid} resources
-resource "aws_api_gateway_resource" "jupyter_resource" {
+resource "aws_api_gateway_resource" "root_resource" {
   rest_api_id = aws_api_gateway_rest_api.callisto_db_api.id
   parent_id   = aws_api_gateway_rest_api.callisto_db_api.root_resource_id
+  path_part   = "api"
+}
+
+
+resource "aws_api_gateway_resource" "jupyter_resource" {
+  rest_api_id = aws_api_gateway_rest_api.callisto_db_api.id
+  parent_id   = aws_api_gateway_resource.root_resource.id
   path_part   = "jupyter"
 }
 
@@ -193,6 +200,7 @@ resource "aws_api_gateway_authorizer" "callisto_cognito" {
   rest_api_id   = aws_api_gateway_rest_api.callisto_db_api.id
   name          = "callisto-cognito-${var.environment}-${var.random_string}"
   type          = "COGNITO_USER_POOLS"
+  identity_source = "method.request.header.Id-Token"
   provider_arns = [aws_cognito_user_pool.callisto_user_pool.arn]
 }
 
