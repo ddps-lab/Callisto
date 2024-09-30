@@ -1,14 +1,9 @@
 variable "region" {
   type    = string
-  default = "ap-northeast-2"
-}
-
-variable "awscli_profile" {
-  type    = string
   default = ""
 }
 
-variable "prefix" {
+variable "function_name" {
   type    = string
   default = ""
 }
@@ -53,10 +48,12 @@ variable "route53_domain" {
   default = ""
 }
 
-variable "region_name" {
+variable "environment" {
   type    = string
-  default = ""
+  default = "dev"
 }
+
+variable "random_hex" {}
 
 variable "attach_lambda_policy" {
   type    = bool

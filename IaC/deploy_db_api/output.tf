@@ -5,3 +5,11 @@ output "api_endpoint_url" {
 output "api_endpoint_domain_url" {
   value = aws_apigatewayv2_domain_name.api_domain_name.domain_name
 }
+
+output "callisto-users_table_name" {
+  value = aws_dynamodb_table.callisto-users.name
+}
+
+output "callisto-jupyter_table_name" {
+  value = aws_dynamodb_table.callisto-jupyter.name
+}

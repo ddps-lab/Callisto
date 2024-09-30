@@ -1,5 +1,5 @@
 resource "aws_lambda_function" "callisto-ddb-jupyter-api" {
-    function_name = "callisto-ddb-jupyter-api-${random_id.random_string.hex}"
+    function_name = "callisto-ddb-jupyter-api-${var.environment}-${var.random_hex}"
     filename      = "/tmp/callisto-ddb-jupyter-api.zip"
     role          = aws_iam_role.lambda_api_role.arn
     handler       = "index.handler"
@@ -10,7 +10,7 @@ resource "aws_lambda_function" "callisto-ddb-jupyter-api" {
 }
 
 resource "aws_lambda_function" "callisto-ddb-users-api" {
-    function_name = "callisto-ddb-users-api-${random_id.random_string.hex}"
+    function_name = "callisto-ddb-users-api-${var.environment}-${var.random_hex}"
     filename      = "/tmp/callisto-ddb-users-api.zip"
     role          = aws_iam_role.lambda_api_role.arn
     handler       = "index.handler"

@@ -1,5 +1,5 @@
 resource "aws_apigatewayv2_api" "callisto_api" {
-  name = "Callisto REST-API-${random_id.random_string.hex}"
+  name = "Callisto REST-API-${var.environment}-${var.random_hex}"
   protocol_type = "HTTP"
   cors_configuration {
     allow_methods = ["*"]
@@ -37,7 +37,7 @@ resource "aws_apigatewayv2_route" "jupyter_controller_post_route" {
 ### stage deploy
 resource "aws_apigatewayv2_stage" "apigtw_stage" {
   api_id = aws_apigatewayv2_api.callisto_api.id
-  name = "callisto-api-dev"
+  name = "callisto-api-${var.environment}-${var.random_hex}"
   auto_deploy = true
 }
 
