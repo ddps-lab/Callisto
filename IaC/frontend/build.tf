@@ -14,5 +14,8 @@ resource "null_resource" "build_react_app" {
     working_dir = "${path.module}/../../frontend/"
   }
 
+  triggers = {
+    file_sha = sha256(file("${local_file.react_env_file.filename}"))
+  }
   depends_on = [ aws_s3_bucket.callisto_web_bucket, local_file.react_env_file ]
 }
