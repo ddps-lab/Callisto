@@ -28,10 +28,10 @@ variable "route53_domain" {
   default = "callisto.ddps.cloud"
 }
 
-# ap-northeast-2 bottlerocket k8s 1.31 ami : ami-012800a9b18f53e6a
+# ap-northeast-2 AL2023 k8s 1.31 ami : ami-0ddebd0f578342110
 variable "ami_id" {
   type    = string
-  default = "ami-012800a9b18f53e6a"
+  default = "ami-0ddebd0f578342110"
 }
 
 variable "jupyter_api_container_repository" {
