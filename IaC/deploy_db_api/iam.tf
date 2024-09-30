@@ -10,7 +10,7 @@
 # }
 
 resource "aws_iam_role" "lambda_api_role" {
-  name = "${var.region}-callisto-db-api-lambda-role-${var.environment}-${var.random_hex}"
+  name = "${var.region}-callisto-db-api-lambda-role-${var.environment}-${var.random_string}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"

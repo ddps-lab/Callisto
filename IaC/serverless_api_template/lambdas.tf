@@ -14,5 +14,5 @@ module "lambda" {
   db_api_url               = var.db_api_url
   route53_domain           = var.route53_domain
   environment              = var.environment
-  random_hex               = var.random_hex
+  random_string               = var.random_string
 }

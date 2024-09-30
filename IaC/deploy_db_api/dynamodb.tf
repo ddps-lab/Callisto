@@ -1,5 +1,5 @@
 resource "aws_dynamodb_table" "callisto-jupyter" {
-  name         = "callisto-jupyter-${var.environment}-${var.random_hex}"
+  name         = "callisto-jupyter-${var.environment}-${var.random_string}"
   billing_mode = "PAY_PER_REQUEST"
 
   attribute {
@@ -16,7 +16,7 @@ resource "aws_dynamodb_table" "callisto-jupyter" {
   range_key = "created_at"
 
   tags = {
-    Name        = "callisto-jupyter-${var.environment}-${var.random_hex}"
+    Name        = "callisto-jupyter-${var.environment}-${var.random_string}"
     Environment = var.environment
   }
 }

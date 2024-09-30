@@ -12,4 +12,4 @@ variable "region" {}
 variable "db_api_url" {}
 variable "route53_domain" {}
 variable "environment" {}
-variable "random_hex" {}
+variable "random_string" {}

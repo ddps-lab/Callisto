@@ -19,7 +19,7 @@ variable "route53_domain" {
 }
 
 variable "environment" {}
-variable "random_hex" {}
+variable "random_string" {}
 variable "eks_cluster_name" {}
 variable "container_registry" {}
 variable "jupyter_api_container_repository" {}

@@ -1,5 +1,5 @@
 resource "aws_iam_role" "lambda-role" {
-  name = "${var.function_name}-aws-lambda-role-${var.environment}-${var.random_hex}"
+  name = "${var.function_name}-aws-lambda-role-${var.environment}-${var.random_string}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -45,7 +45,7 @@ resource "aws_iam_role_policy_attachment" "lambda_policy" {
 }
 
 resource "aws_lambda_function" "lambda" {
-  function_name = "${var.function_name}-${var.environment}-${var.random_hex}"
+  function_name = "${var.function_name}-${var.environment}-${var.random_string}"
   package_type  = "Image"
   architectures = ["x86_64"]
   image_uri     = "${var.container_registry}/${var.container_repository}:${var.container_image_tag}"

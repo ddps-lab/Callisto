@@ -6,8 +6,12 @@ module "kubernetes_cluster" {
   environment     = var.environment
   cluster_version = var.k8s_cluster_version
   route53_domain  = var.route53_domain
-  random_hex      = random_id.random_string.hex
-  cluster_name    = "callisto-k8s-cluster-${var.environment}-${random_id.random_string.hex}"
+  random_string      = random_string.random_string.result
+  cluster_name    = "callisto-k8s-cluster-${var.environment}-${random_string.random_string.result}"
+  providers = {
+    aws          = aws
+    aws.virginia = aws.virginia
+  }
 }
 
 module "deploy_db_api" {
@@ -16,13 +20,17 @@ module "deploy_db_api" {
   awscli_profile                   = var.awscli_profile
   region                           = var.region
   environment                      = var.environment
-  random_hex                       = random_id.random_string.hex
+  random_string                       = random_string.random_string.result
   eks_cluster_name                 = module.kubernetes_cluster.cluster_name
   container_registry               = var.container_registry
   jupyter_ddb_table_name           = module.deploy_db_api.callisto-jupyter_table_name
   jupyter_api_container_repository = var.jupyter_api_container_repository
   jupyter_api_image_tag            = var.jupyter_api_image_tag
 
+  providers = {
+    aws          = aws
+    aws.virginia = aws.virginia
+  }
   depends_on = [module.kubernetes_cluster]
 }
 
@@ -30,7 +38,7 @@ module "frontend" {
   source                               = "./IaC/frontend"
   region                               = var.region
   environment                          = var.environment
-  random_hex                           = random_id.random_string.hex
+  random_string                           = random_string.random_string.result
   awscli_profile                       = var.awscli_profile
   db_api_url                           = module.deploy_db_api.api_endpoint_domain_url
   callisto_cognito_user_pool_id        = module.deploy_db_api.callisto_cognito_user_pool_id

@@ -53,7 +53,7 @@ variable "environment" {
   default = "dev"
 }
 
-variable "random_hex" {}
+variable "random_string" {}
 
 variable "attach_lambda_policy" {
   type    = bool

@@ -1,5 +1,5 @@
 variable "environment" {}
-variable "random_hex" {}
+variable "random_string" {}
 variable "region" {}
 variable "db_api_url" {}
 variable "awscli_profile" {}

@@ -1,5 +1,6 @@
 resource "aws_s3_bucket" "callisto_web_bucket" {
-    bucket = "callisto-web-${var.environment}-${var.random_hex}"
+    bucket = "callisto-web-${var.environment}-${var.random_string}"
+    force_destroy = true
 }
 
 resource "aws_s3_bucket_public_access_block" "callisto-s3-web-bucket-public-conf" {
@@ -22,6 +23,18 @@ resource "aws_s3_bucket_website_configuration" "callisto-s3-web-bucket-web-conf"
   }
 }
 
+resource "aws_s3_bucket_cors_configuration" "callisto-s3-web-cors-conf" {
+  bucket = aws_s3_bucket.callisto_web_bucket.bucket
+
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["GET", "PUT", "POST", "DELETE", "HEAD"]
+    allowed_origins = ["*"]
+    expose_headers  = ["ETag"]
+    max_age_seconds = 3000
+  }
+}
+
 resource "aws_s3_bucket_policy" "callisto-s3-web-bucket-policy" {
   bucket = aws_s3_bucket.callisto_web_bucket.bucket
   policy = jsonencode({
@@ -35,4 +48,6 @@ resource "aws_s3_bucket_policy" "callisto-s3-web-bucket-policy" {
       }
     ]
   })
+
+  depends_on = [ aws_s3_bucket_public_access_block.callisto-s3-web-bucket-public-conf ]
 }
