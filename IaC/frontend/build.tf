@@ -1,7 +1,7 @@
 resource "local_file" "react_env_file" {
     filename = "${path.module}/../../frontend/.env"
     content = <<EOF
-VITE_DB_API_URL="${var.db_api_url}"
+VITE_DB_API_URL="https://${var.db_api_url}"
 VITE_COGNITO_REGION="${var.region}"
 VITE_COGNITO_USER_POOL_ID="${var.callisto_cognito_user_pool_id}"
 VITE_COGNITO_CLIENT_ID="${var.callisto_cognito_user_pool_client_id}"
