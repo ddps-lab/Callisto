@@ -6,6 +6,7 @@ import os
 import subprocess
 from kubernetes import client, config, utils
 from jinja2 import Environment, FileSystemLoader
+import tempfile
 
 EKS_CLUSTER_NAME = os.getenv('EKS_CLUSTER_NAME')
 REGION = os.getenv("REGION")
@@ -79,7 +80,10 @@ def create(auth_sub, payload):
             'inactivity_time': 15
         }
         rendered_yaml = render_template("jupyter_template.yaml", **variables)
-        utils.create_from_yaml(api_client, rendered_yaml, namespace=uid)
+        with tempfile.NamedTemporaryFile(delete=True, mode='w') as temp_yaml_file:
+            temp_yaml_file.write(rendered_yaml)
+            temp_yaml_file.flush() 
+            utils.create_from_yaml(api_client, temp_yaml_file.name, namespace=auth_sub)
         jupyter["endpoint_url"] = f"https://jupyter.{ROUTE53_DOMAIN}/{auth_sub}-{created_at}"
     except Exception as e:
         print(e)
@@ -198,7 +202,10 @@ def update(auth_sub, uid, payload):
                 'inactivity_time': 15
             }
             rendered_yaml = render_template("jupyter_template.yaml", **variables)
-            utils.create_from_yaml(api_client, rendered_yaml, namespace=uid)
+            with tempfile.NamedTemporaryFile(delete=True, mode='w') as temp_yaml_file:
+                temp_yaml_file.write(rendered_yaml)
+                temp_yaml_file.flush() 
+                utils.create_from_yaml(api_client, temp_yaml_file.name, namespace=sub)
 
     except Exception as e:
         print(e)
