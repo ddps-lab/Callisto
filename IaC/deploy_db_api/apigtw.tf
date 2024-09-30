@@ -42,7 +42,7 @@ resource "aws_apigatewayv2_authorizer" "callisto_cognito_authorizer" {
 
 ### routes
 # /jupyter
-resource "aws_apigatewayv2_route" "jupyter_post_route" {
+resource "aws_apigatewayv2_route" "jupyter_route" {
   api_id             = aws_apigatewayv2_api.callisto_db_api.id
   route_key          = "ANY /jupyter"
   authorization_type = "JWT"
@@ -50,7 +50,7 @@ resource "aws_apigatewayv2_route" "jupyter_post_route" {
   target             = "integrations/${aws_apigatewayv2_integration.jupyter_integration.id}"
 }
 
-resource "aws_apigatewayv2_route" "jupyter_post_route" {
+resource "aws_apigatewayv2_route" "jupyter_uid_route" {
   api_id             = aws_apigatewayv2_api.callisto_db_api.id
   route_key          = "ANY /jupyter/{uid}"
   authorization_type = "JWT"
