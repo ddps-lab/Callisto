@@ -44,6 +44,7 @@ resource "aws_cognito_user_pool_client" "callisto_user_pool_client" {
   generate_secret = false
 
   allowed_oauth_flows = [ "code", "implicit", "client_credentials" ]
+  allowed_oauth_scopes = [ "email", "openid", "profile", "aws.cognito.signin.user.admin" ]
   allowed_oauth_flows_user_pool_client = true
   explicit_auth_flows = [
     "ALLOW_USER_PASSWORD_AUTH",
@@ -55,7 +56,7 @@ resource "aws_cognito_user_pool_client" "callisto_user_pool_client" {
 }
 
 resource "aws_cognito_user_pool_domain" "callisto_user_pool_domain" {
-  domain = "callisto_user_pool_domain-${var.environment}-${lower(var.random_hex)}"
+  domain = "callisto-user-pool-domain-${var.environment}-${lower(var.random_hex)}"
   user_pool_id = aws_cognito_user_pool.callisto_user_pool.id
 }
 
