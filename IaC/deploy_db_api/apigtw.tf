@@ -155,7 +155,7 @@ resource "aws_api_gateway_integration_response" "jupyter_options_lambda_integrat
   rest_api_id = aws_api_gateway_rest_api.callisto_db_api.id
   resource_id = aws_api_gateway_resource.jupyter_resource.id
   http_method = aws_api_gateway_method.options_jupyter_method.http_method
-  status_code = "200"
+  status_code = aws_api_gateway_method_response.jupyter_options_lambda_method_response.status_code
 
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token,id-token'"
@@ -181,7 +181,7 @@ resource "aws_api_gateway_integration_response" "jupyter_uid_options_lambda_inte
   rest_api_id = aws_api_gateway_rest_api.callisto_db_api.id
   resource_id = aws_api_gateway_resource.jupyter_uid_resource.id
   http_method = aws_api_gateway_method.options_jupyter_uid_method.http_method
-  status_code = "200"
+  status_code = aws_api_gateway_method_response.jupyter_uid_options_lambda_method_response.status_code
 
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token,id-token'"
