@@ -1,0 +1,14 @@
+:root {
+  font-family: "Pretendard Variable", Pretendard, -apple-system, Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  place-items: center;
+  min-width: 1050px;
+  min-height: 100vh;
+}
