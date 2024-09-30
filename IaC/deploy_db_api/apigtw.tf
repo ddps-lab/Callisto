@@ -4,7 +4,7 @@ resource "aws_apigatewayv2_api" "callisto_db_api" {
   cors_configuration {
     allow_origins = ["*"]
     allow_headers = ["id-token", "Content-Type"]
-    allow_methods = ["OPTIONS", "GET", "POST", "PUT", "DELETE", "PATCH", "ANY"]
+    allow_methods = ["OPTIONS", "GET", "POST", "PUT", "DELETE", "PATCH"]
     max_age       = 3600
   }
 }

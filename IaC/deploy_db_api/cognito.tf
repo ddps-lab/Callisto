@@ -39,7 +39,7 @@ resource "aws_cognito_user_pool" "callisto_user_pool" {
 
 resource "aws_cognito_user_pool_client" "callisto_user_pool_client" {
   user_pool_id = aws_cognito_user_pool.callisto_user_pool.id
-  name = "callisto_user_pool_client-${var.environment}-${var.random_hex}"
+  name = "callisto_user_pool_client-${var.environment}-${lower(var.random_hex)}"
 
   generate_secret = false
 
