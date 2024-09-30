@@ -42,6 +42,7 @@ resource "aws_cloudfront_distribution" "distribution" {
   origin {
     domain_name = aws_s3_bucket.callisto_web_bucket.bucket_regional_domain_name
     origin_id   = "S3-${aws_s3_bucket.callisto_web_bucket.id}"
+    origin_path = "/*"
     s3_origin_config {
       origin_access_identity = aws_cloudfront_origin_access_identity.oai.cloudfront_access_identity_path
     }
