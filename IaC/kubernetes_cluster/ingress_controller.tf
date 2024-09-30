@@ -72,7 +72,7 @@ module "external_dns_irsa_role" {
 }
 
 resource "aws_acm_certificate" "certificate" {
-  domain_name       = var.route53_domain
+  domain_name       = "jupyter.${var.route53_domain}"
   validation_method = "DNS"
 }
 
@@ -114,7 +114,7 @@ resource "helm_release" "nginx-ingress-controller" {
 
   set {
     name  = "controller.service.annotations.external-dns\\.alpha\\.kubernetes\\.io/hostname"
-    value = data.aws_route53_zone.route53_zone.name
+    value = "jupyter.${var.route53_domain}"
   }
 
   set {
