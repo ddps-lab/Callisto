@@ -1,8 +1,5 @@
 resource "aws_api_gateway_rest_api" "callisto_db_api" {
   name = "callisto-db-api-${var.environment}-${var.random_string}"
-  endpoint_configuration {
-    types = ["REGIONAL"]
-  }
 }
 
 ### lambda permissions
