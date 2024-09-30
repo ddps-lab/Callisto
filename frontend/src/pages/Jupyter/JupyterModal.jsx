@@ -120,7 +120,7 @@ export default function JupyterModal(props) {
             </ErrorMessage>
           </>
         )}
-        <InputTitle>Jupyter CPU Core(s)</InputTitle>
+        <InputTitle>CPU Core(s)</InputTitle>
         <InputNumber
           defaultValue={1}
           placeholder="Core(s)"
@@ -132,7 +132,7 @@ export default function JupyterModal(props) {
           onChange={(value) => setCpu(value || 1)}
           value={cpu}
         />
-        <InputTitle>Jupyter Memory (GB)</InputTitle>
+        <InputTitle>Memory (GB)</InputTitle>
         <InputNumber
           defaultValue={2}
           placeholder="Memory (GB)"
@@ -144,7 +144,7 @@ export default function JupyterModal(props) {
           onChange={(value) => setMemory(value || 2)}
           value={memory}
         />
-        <InputTitle>Jupyter Disk (GB)</InputTitle>
+        <InputTitle>Disk (GB)</InputTitle>
         <InputNumber
           defaultValue={20}
           placeholder="Disk (GB)"

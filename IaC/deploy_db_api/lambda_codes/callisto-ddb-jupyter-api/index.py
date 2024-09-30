@@ -4,11 +4,11 @@ import json
 import boto3
 import os
 
-table_name = os.environ.get('table_name', "callisto_jupyter")
+TABLE_NAME = os.environ.get('TABLE_NAME', "callisto_jupyter")
 
-client = boto3.client("dynamodb")
-ddb = boto3.resource("dynamodb")
-table = ddb.Table(table_name)
+CLIENT = boto3.client("dynamodb")
+DDB = boto3.resource("dynamodb")
+TABLE = DDB.Table(TABLE_NAME)
 
 def create(auth_sub, payload):
     necessary_keys = ["name", "cpu", "memory", "disk"]
@@ -41,7 +41,7 @@ def create(auth_sub, payload):
         "inactivity_time": 15,
     }
     try:
-        table.put_item(Item=jupyter);
+        TABLE.put_item(Item=jupyter);
         return {
             "statusCode": 201,
             "body": json.dumps({
@@ -76,7 +76,7 @@ def read(auth_sub, uid):
             })
         }
     try:
-        response = table.get_item(Key={"sub": sub, "created_at": int(created_at)})
+        response = TABLE.get_item(Key={"sub": sub, "created_at": int(created_at)})
         if "Item" not in response:
             return {
                 "statusCode": 404,
@@ -101,7 +101,7 @@ def read(auth_sub, uid):
 
 def read_all(auth_sub):
     try:
-        response = table.query(KeyConditionExpression=boto3.dynamodb.conditions.Key("sub").eq(auth_sub))
+        response = TABLE.query(KeyConditionExpression=boto3.dynamodb.conditions.Key("sub").eq(auth_sub))
         return {
             "statusCode": 200,
             "body": json.dumps(response["Items"], default=lambda o: int(o) if isinstance(o, Decimal) and o % 1 == 0 else float(o))
@@ -134,7 +134,7 @@ def update(auth_sub, uid, payload):
             })
         }
     try:
-        response = table.get_item(Key={"sub": sub, "created_at": int(created_at)})
+        response = TABLE.get_item(Key={"sub": sub, "created_at": int(created_at)})
         if "Item" not in response:
             return {
                 "statusCode": 404,
@@ -148,7 +148,7 @@ def update(auth_sub, uid, payload):
             if key in payload and payload[key]:
                 # if status, cpu, memory, disk is changed 
                 jupyter[key] = payload[key]
-        table.put_item(Item=jupyter)
+        TABLE.put_item(Item=jupyter)
         return {
             "statusCode": 200,
             "body": json.dumps({
@@ -183,7 +183,7 @@ def delete(auth_sub, uid):
             })
         }
     try:
-        response = table.get_item(Key={"sub": sub, "created_at": int(created_at)})
+        response = TABLE.get_item(Key={"sub": sub, "created_at": int(created_at)})
         if "Item" not in response:
             return {
                 "statusCode": 404,
@@ -193,7 +193,7 @@ def delete(auth_sub, uid):
             }
         
         jupyter = response["Item"]
-        table.delete_item(Key={"sub": sub, "created_at": int(created_at)})
+        TABLE.delete_item(Key={"sub": sub, "created_at": int(created_at)})
         return {
             "statusCode": 200,
             "body": json.dumps({
