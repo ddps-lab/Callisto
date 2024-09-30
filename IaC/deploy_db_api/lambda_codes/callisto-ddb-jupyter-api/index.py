@@ -13,11 +13,6 @@ ECR_URI = os.getenv("ECR_URI")
 DB_API_URL = os.getenv("DB_API_URL")
 ROUTE53_DOMAIN = os.getenv("ROUTE53_DOMAIN")
 
-headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': '*',
-    'Access-Control-Allow-Methods': '*'
-}
 # update .kubeconfig file
 subprocess.run([
     "aws", "eks", "update-kubeconfig",
@@ -142,7 +137,6 @@ def read(auth_sub, uid):
         
         return {
             "statusCode": 200,
-            "headers": headers,
             "body": json.dumps(response["Item"], default=lambda o: int(o) if isinstance(o, Decimal) and o % 1 == 0 else float(o))
         }
     except Exception as e:
@@ -160,7 +154,6 @@ def read_all(auth_sub):
         response = TABLE.query(KeyConditionExpression=boto3.dynamodb.conditions.Key("sub").eq(auth_sub))
         return {
             "statusCode": 200,
-            "headers": headers,
             "body": json.dumps(response["Items"], default=lambda o: int(o) if isinstance(o, Decimal) and o % 1 == 0 else float(o))
         }
     except Exception as e:
