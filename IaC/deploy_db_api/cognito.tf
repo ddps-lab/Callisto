@@ -1,8 +1,7 @@
 resource "aws_cognito_user_pool" "callisto_user_pool" {
-  name = "callisto-user-pool-${var.environment}-${var.random_hex}"
-
-  alias_attributes  = ["email"]
-  mfa_configuration = "OFF"
+  name                = "callisto-user-pool-${var.environment}-${var.random_hex}"
+  username_attributes = ["email"]
+  mfa_configuration   = "OFF"
 
   schema {
     attribute_data_type = "String"
@@ -39,7 +38,7 @@ resource "aws_cognito_user_pool" "callisto_user_pool" {
 
 resource "aws_cognito_user_pool_client" "callisto_user_pool_client" {
   user_pool_id = aws_cognito_user_pool.callisto_user_pool.id
-  name = "callisto_user_pool_client-${var.environment}-${lower(var.random_hex)}"
+  name         = "callisto_user_pool_client-${var.environment}-${lower(var.random_hex)}"
 
   generate_secret = false
 
@@ -56,7 +55,7 @@ resource "aws_cognito_user_pool_client" "callisto_user_pool_client" {
 }
 
 resource "aws_cognito_user_pool_domain" "callisto_user_pool_domain" {
-  domain = "callisto-user-pool-domain-${var.environment}-${lower(var.random_hex)}"
+  domain       = "callisto-user-pool-domain-${var.environment}-${lower(var.random_hex)}"
   user_pool_id = aws_cognito_user_pool.callisto_user_pool.id
 }
 
