@@ -2,7 +2,7 @@ resource "aws_cognito_user_pool" "callisto_user_pool" {
   name = "callisto-user-pool-${var.environment}-${var.random_hex}"
 
   alias_attributes  = ["email"]
-  mfa_configuration = "off"
+  mfa_configuration = "OFF"
 
   schema {
     attribute_data_type = "String"
@@ -46,7 +46,7 @@ resource "aws_cognito_user_pool_client" "callisto_user_pool_client" {
   allowed_oauth_flows_user_pool_client = true
   explicit_auth_flows = [
     "ALLOW_USER_PASSWORD_AUTH",
-    "ALLOW_ADMIN_USER_PASSWORD_WAUTH"
+    "ALLOW_ADMIN_USER_PASSWORD_AUTH"
   ]
 
   prevent_user_existence_errors = "ENABLED"
