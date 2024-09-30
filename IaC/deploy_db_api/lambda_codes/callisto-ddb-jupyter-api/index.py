@@ -80,7 +80,7 @@ def create(auth_sub, payload):
         }
         rendered_yaml = render_template("jupyter_template.yaml", **variables)
         utils.create_from_yaml(api_client, rendered_yaml, namespace=uid)
-        jupyter["endpoint_url"] = f"https://jupter.{ROUTE53_DOMAIN}/{auth_sub}-{created_at}"
+        jupyter["endpoint_url"] = f"https://jupyter.{ROUTE53_DOMAIN}/{auth_sub}-{created_at}"
     except Exception as e:
         print(e)
         return {
