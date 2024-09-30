@@ -7,17 +7,17 @@ import subprocess
 from kubernetes import client, config, utils
 from jinja2 import Environment, FileSystemLoader
 
-eks_cluster_name = os.getenv('EKS_CLUSTER_NAME')
-region = os.getenv("REGION")
-ecr_uri = os.getenv("ECR_URI")
-db_api_url = os.getenv("DB_API_URL")
-route53_domain = os.getenv("ROUTE53_DOMAIN")
+EKS_CLUSTER_NAME = os.getenv('EKS_CLUSTER_NAME')
+REGION = os.getenv("REGION")
+ECR_URI = os.getenv("ECR_URI")
+DB_API_URL = os.getenv("DB_API_URL")
+ROUTE53_DOMAIN = os.getenv("ROUTE53_DOMAIN")
 
 # update .kubeconfig file
 subprocess.run([
     "aws", "eks", "update-kubeconfig",
-    "--name", eks_cluster_name,
-    "--region", region,
+    "--name", EKS_CLUSTER_NAME,
+    "--region", REGION,
     "--kubeconfig", '/tmp/kubeconfig'
 ])
 config.load_kube_config(config_file='/tmp/kubeconfig')
@@ -75,6 +75,7 @@ def create(auth_sub, payload):
             'cpu_core': int(payload["cpu"]) * 1000,
             'memory': int(payload["memory"]) * 1024,
             'storage': payload["disk"],
+            'ecr_uri': ECR_URI,
             'inactivity_time': 15
         }
         rendered_yaml = render_template("jupyter_template.yaml", **variables)
@@ -192,6 +193,7 @@ def update(auth_sub, uid, payload):
                 'cpu_core': int(payload["cpu"]) * 1000,
                 'memory': int(payload["memory"]) * 1024,
                 'storage': payload["disk"],
+                'ecr_uri': ECR_URI,
                 'inactivity_time': 15
             }
             rendered_yaml = render_template("jupyter_template.yaml", **variables)

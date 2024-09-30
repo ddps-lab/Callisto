@@ -19,6 +19,7 @@ module "deploy_db_api" {
   random_hex     = random_id.random_string.hex
   eks_cluster_name = module.kubernetes_cluster.eks_cluster_name
   container_registry = var.container_registry
+  jupyter_ddb_table_name = module.deploy_db_api.callisto-jupyter_table_name
   jupyter_api_container_repository = var.jupyter_api_container_repository
   jupyter_api_image_tag = var.jupyter_api_image_tag
 

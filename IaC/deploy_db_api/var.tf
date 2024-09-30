@@ -24,3 +24,4 @@ variable "eks_cluster_name" {}
 variable "container_registry" {}
 variable "jupyter_api_container_repository" {}
 variable "jupyter_api_image_tag" {} 
+variable "jupyter_ddb_table_name" {} 
