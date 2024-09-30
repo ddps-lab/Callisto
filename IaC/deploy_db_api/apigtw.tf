@@ -200,4 +200,15 @@ resource "aws_api_gateway_authorizer" "callisto_cognito" {
 resource "aws_api_gateway_deployment" "callisto_db_api_deployment" {
   rest_api_id = aws_api_gateway_rest_api.callisto_db_api.id
   stage_name  = var.environment
+  depends_on = [ aws_api_gateway_integration.jupyter_any_lambda_integration,
+                 aws_api_gateway_integration.jupyter_uid_any_lambda_integration,
+                 aws_api_gateway_integration.jupyter_options_lambda_integration,
+                 aws_api_gateway_integration.jupyter_uid_options_lambda_integration,
+                 aws_api_gateway_method.any_jupyter_method,
+                 aws_api_gateway_method.any_jupyter_uid_method,
+                 aws_api_gateway_method.options_jupyter_method,
+                 aws_api_gateway_method.options_jupyter_uid_method,
+                 aws_api_gateway_authorizer.callisto_cognito,
+                 aws_lambda_permission.callisto_ddb_jupyter_api_permission
+               ]
 }
