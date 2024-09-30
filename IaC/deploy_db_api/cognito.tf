@@ -43,7 +43,7 @@ resource "aws_cognito_user_pool_client" "callisto_user_pool_client" {
 
   generate_secret = false
 
-  allowed_oauth_flows = [ "code", "implicit", "client_credentials" ]
+  allowed_oauth_flows = [ "code", "implicit" ]
   allowed_oauth_scopes = [ "email", "openid", "profile", "aws.cognito.signin.user.admin" ]
   allowed_oauth_flows_user_pool_client = true
   explicit_auth_flows = [
