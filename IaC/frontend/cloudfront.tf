@@ -177,12 +177,12 @@ resource "aws_cloudfront_distribution" "distribution" {
     origin_request_policy_id = aws_cloudfront_origin_request_policy.api_gateway_request_policy.id
   }
 
-  # custom_error_response {
-  #   error_code            = 403
-  #   response_page_path    = "/"
-  #   response_code         = 200
-  #   error_caching_min_ttl = 300
-  # }
+  custom_error_response {
+    error_code            = 403
+    response_page_path    = "/"
+    response_code         = 200
+    error_caching_min_ttl = 300
+  }
 
   price_class = "PriceClass_All"
 
