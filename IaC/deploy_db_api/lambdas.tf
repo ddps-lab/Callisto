@@ -9,11 +9,14 @@ resource "aws_lambda_function" "callisto-ddb-jupyter-api" {
 
   environment {
     variables = {
-      REGION           = var.region
-      TABLE_NAME       = var.jupyter_ddb_table_name
-      EKS_CLUSTER_NAME = var.eks_cluster_name
-      ROUTE53_DOMAIN   = var.route53_domain
-      ECR_URI          = var.container_registry
+      REGION            = var.region
+      TABLE_NAME        = var.jupyter_ddb_table_name
+      TABLE_ARN         = aws_dynamodb_table.callisto-jupyter.arn
+      EKS_CLUSTER_NAME  = var.eks_cluster_name
+      ROUTE53_DOMAIN    = var.route53_domain
+      ECR_URI           = var.container_registry
+      OIDC_PROVIDER     = var.oidc_provider
+      OIDC_PROVIDER_ARN = var.oidc_provider_arn
     }
   }
 }

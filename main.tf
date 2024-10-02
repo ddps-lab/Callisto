@@ -25,6 +25,8 @@ module "deploy_db_api" {
   route53_data                     = data.aws_route53_zone.route53_zone
   eks_cluster_name                 = module.kubernetes_cluster.cluster_name
   container_registry               = var.container_registry
+  oidc_provider                    = module.kubernetes_cluster.oidc_provider
+  oidc_provider_arn                = module.kubernetes_cluster.oidc_provider_arn
   jupyter_ddb_table_name           = module.deploy_db_api.callisto-jupyter_table_name
   jupyter_api_container_repository = var.jupyter_api_container_repository
   jupyter_api_image_tag            = var.jupyter_api_image_tag

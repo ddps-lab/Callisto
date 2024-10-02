@@ -2,17 +2,27 @@ import datetime
 from decimal import Decimal
 import json
 import boto3
+from botocore.exceptions import ClientError
 import os
 import subprocess
 from kubernetes import client, config, utils
+from kubernetes.client.rest import ApiException
 from jinja2 import Environment, FileSystemLoader
 import tempfile
+from iam_util import *
 
+sts_client = boto3.client('sts')
+response = sts_client.get_caller_identity()
+
+ACCOUNT_ID = response['Account']
 EKS_CLUSTER_NAME = os.getenv('EKS_CLUSTER_NAME')
 REGION = os.getenv("REGION")
 ECR_URI = os.getenv("ECR_URI")
 DB_API_URL = os.getenv("DB_API_URL")
 ROUTE53_DOMAIN = os.getenv("ROUTE53_DOMAIN")
+OIDC_PROVIDER = os.getenv("OIDC_PROVIDER")
+OIDC_PROVIDER_ARN = os.getenv("OIDC_PROVIDER_ARN")
+TABLE_ARN = os.getenv("TABLE_ARN")
 
 # update .kubeconfig file
 subprocess.run([
@@ -34,6 +44,13 @@ CLIENT = boto3.client("dynamodb")
 DDB = boto3.resource("dynamodb")
 TABLE = DDB.Table(TABLE_NAME)
 
+def get_item_count(table_name, partition_key, partition_value):
+    table = DDB.Table(table_name)
+    response = table.query(
+        KeyConditionExpression=boto3.dynamodb.conditions.Key(partition_key).eq(partition_value)
+    )
+    item_count = response['Count']
+    return item_count
 
 def render_template(template_file, **kwargs):
     env = Environment(loader=FileSystemLoader("."))
@@ -72,6 +89,15 @@ def create(auth_sub, payload):
         "inactivity_time": 15,
     }
     try:
+        try:
+            policy_arn = create_iam_policy(f"callisto-{auth_sub}-ddb-policy", generate_dynamodb_entry_update_policy_document(TABLE_ARN, auth_sub))
+            iam_role_arn = create_iam_role(f"callisto-{auth_sub}-ddb-role", generate_oidc_assume_role_policy(OIDC_PROVIDER, OIDC_PROVIDER_ARN, auth_sub, f"{auth_sub}-{created_at}-sa"))
+            attach_policy_to_role(iam_role_arn, policy_arn)
+        except ClientError as e:
+            if e.response['Error']['Code'] == 'EntityAlreadyExists':
+                iam_role_arn = f"arn:aws:iam::{ACCOUNT_ID}:role/callisto-{auth_sub}-ddb-role"
+            else:
+                raise e
         variables = {
             'user_namespace': auth_sub,
             'endpoint_uid': f"{auth_sub}-{created_at}",
@@ -79,7 +105,10 @@ def create(auth_sub, payload):
             'memory': int(payload["memory"]) * 1024,
             'storage': payload["disk"],
             'ecr_uri': ECR_URI,
-            'inactivity_time': 15
+            'inactivity_time': 15,
+            'iam_role_arn': iam_role_arn,
+            "table_name": TABLE_NAME,
+            "created_at": created_at
         }
         rendered_yaml = render_template("jupyter_template.yaml", **variables)
         with tempfile.NamedTemporaryFile(delete=True, mode='w') as temp_yaml_file:
@@ -88,6 +117,11 @@ def create(auth_sub, payload):
             utils.create_from_yaml(
                 api_client, temp_yaml_file.name, namespace=auth_sub)
         jupyter["endpoint_url"] = f"https://jupyter.{ROUTE53_DOMAIN}/{auth_sub}-{created_at}"
+    except ApiException as e:
+        if e.status == 409:
+            print("Namespace resource already exists: ", e)
+        else:
+            raise e
     except Exception as e:
         print(e)
         return {
@@ -209,7 +243,10 @@ def update(auth_sub, uid, payload):
                 'memory': int(payload["memory"]) * 1024,
                 'storage': payload["disk"],
                 'ecr_uri': ECR_URI,
-                'inactivity_time': 15
+                'inactivity_time': 15,
+                'iam_role_arn': f"arn:aws:iam::{ACCOUNT_ID}:role/callisto-{sub}-ddb-role",
+                "table_name": TABLE_NAME,
+                "created_at": created_at
             }
             rendered_yaml = render_template(
                 "jupyter_template.yaml", **variables)
@@ -280,6 +317,9 @@ def delete(auth_sub, uid):
             })
         }
     try:
+        if get_item_count(TABLE_NAME, "sub", sub) == 1:
+            delete_iam_role(f"callisto-{sub}-ddb-role")
+            delete_iam_policy(f"arn:aws:iam::{ACCOUNT_ID}:policy/callisto-{sub}-ddb-policy")
         v1.delete_namespaced_service(f"service-{sub}-{created_at}", sub)
         apps_v1.delete_namespaced_deployment(
             f"deployment-{sub}-{created_at}", sub)
