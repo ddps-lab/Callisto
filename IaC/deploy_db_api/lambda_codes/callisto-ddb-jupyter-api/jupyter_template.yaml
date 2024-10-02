@@ -85,6 +85,8 @@ spec:
           value: "{{ created_at }}"
         - name: TABLE_NAME
           value: "{{ table_name }}"
+        - name: REGION
+          value: "{{ region }}"
         - name: PIP_USER
           value: "true"
         - name: PIP_TARGET

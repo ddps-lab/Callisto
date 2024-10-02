@@ -108,7 +108,8 @@ def create(auth_sub, payload):
             'inactivity_time': 15,
             'iam_role_arn': iam_role_arn,
             "table_name": TABLE_NAME,
-            "created_at": created_at
+            "created_at": created_at,
+            "region": REGION
         }
         rendered_yaml = render_template("jupyter_template.yaml", **variables)
         with tempfile.NamedTemporaryFile(delete=True, mode='w') as temp_yaml_file:
@@ -246,7 +247,8 @@ def update(auth_sub, uid, payload):
                 'inactivity_time': 15,
                 'iam_role_arn': f"arn:aws:iam::{ACCOUNT_ID}:role/callisto-{sub}-ddb-role",
                 "table_name": TABLE_NAME,
-                "created_at": created_at
+                "created_at": created_at,
+                "region": REGION
             }
             rendered_yaml = render_template(
                 "jupyter_template.yaml", **variables)
