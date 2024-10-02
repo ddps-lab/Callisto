@@ -4,49 +4,53 @@ module "kubernetes_cluster" {
   ami_id          = var.ami_id
   region          = var.region
   environment     = var.environment
+  route53_data    = data.aws_route53_zone.route53_zone
   cluster_version = var.k8s_cluster_version
   route53_domain  = var.route53_domain
-  random_hex      = random_id.random_string.hex
-  cluster_name    = "callisto-k8s-cluster-${var.environment}-${random_id.random_string.hex}"
+  random_string   = random_string.random_string.result
+  cluster_name    = "callisto-k8s-cluster-${var.environment}-${random_string.random_string.result}"
+  providers = {
+    aws          = aws
+    aws.virginia = aws.virginia
+  }
 }
 
 module "deploy_db_api" {
-  source         = "./IaC/deploy_db_api"
-  route53_domain = var.route53_domain
-  awscli_profile = var.awscli_profile
-  region         = var.region
-  environment    = var.environment
-  random_hex     = random_id.random_string.hex
-
-}
-
-module "callisto_jupyter_controller" {
-  source               = "./IaC/serverless_api_template"
-  function_name        = "callisto_jupyter_controller"
-  container_registry   = var.container_registry
-  container_repository = "callisto-jupyter-controller"
-  container_image_tag  = "latest"
-  lambda_ram_size      = 256
-  attach_eks_policy    = true
-  region               = var.region
-  eks_cluster_name     = module.kubernetes_cluster.cluster_name
-  db_api_url           = "https://${module.deploy_db_api.api_endpoint_domain_url}"
-  route53_domain       = var.route53_domain
-  environment          = var.environment
-  random_hex           = random_id.random_string.hex
-
-
-  depends_on = [module.kubernetes_cluster, module.deploy_db_api]
-}
-
-module "deploy_api" {
-  source                           = "./IaC/deploy_api"
+  source                           = "./IaC/deploy_db_api"
   route53_domain                   = var.route53_domain
+  awscli_profile                   = var.awscli_profile
   region                           = var.region
-  jupyter_controller_function_name = module.callisto_jupyter_controller.function_name
-  jupyter_controller_function_arn  = module.callisto_jupyter_controller.function_arn
   environment                      = var.environment
-  random_hex                       = random_id.random_string.hex
+  random_string                    = random_string.random_string.result
+  route53_data                     = data.aws_route53_zone.route53_zone
+  eks_cluster_name                 = module.kubernetes_cluster.cluster_name
+  container_registry               = var.container_registry
+  jupyter_ddb_table_name           = module.deploy_db_api.callisto-jupyter_table_name
+  jupyter_api_container_repository = var.jupyter_api_container_repository
+  jupyter_api_image_tag            = var.jupyter_api_image_tag
 
-  depends_on = [module.callisto_jupyter_controller]
+  providers = {
+    aws          = aws
+    aws.virginia = aws.virginia
+  }
+  depends_on = [module.kubernetes_cluster]
+}
+
+module "frontend" {
+  source                               = "./IaC/frontend"
+  region                               = var.region
+  environment                          = var.environment
+  random_string                        = random_string.random_string.result
+  awscli_profile                       = var.awscli_profile
+  route53_domain                       = var.route53_domain
+  callisto_cognito_user_pool_id        = module.deploy_db_api.callisto_cognito_user_pool_id
+  callisto_cognito_user_pool_client_id = module.deploy_db_api.callisto_cognito_user_pool_client_id
+  route53_data                         = data.aws_route53_zone.route53_zone
+  api_gateway_id                       = module.deploy_db_api.api_gateway_id
+
+  providers = {
+    aws          = aws
+    aws.virginia = aws.virginia
+  }
+  depends_on = [module.deploy_db_api]
 }

@@ -3,12 +3,43 @@ from decimal import Decimal
 import json
 import boto3
 import os
+import subprocess
+from kubernetes import client, config, utils
+from jinja2 import Environment, FileSystemLoader
+import tempfile
+
+EKS_CLUSTER_NAME = os.getenv('EKS_CLUSTER_NAME')
+REGION = os.getenv("REGION")
+ECR_URI = os.getenv("ECR_URI")
+DB_API_URL = os.getenv("DB_API_URL")
+ROUTE53_DOMAIN = os.getenv("ROUTE53_DOMAIN")
+
+# update .kubeconfig file
+subprocess.run([
+    "aws", "eks", "update-kubeconfig",
+    "--name", EKS_CLUSTER_NAME,
+    "--region", REGION,
+    "--kubeconfig", '/tmp/kubeconfig'
+])
+config.load_kube_config(config_file='/tmp/kubeconfig')
+v1 = client.CoreV1Api()
+apps_v1 = client.AppsV1Api()
+netwokring_v1 = client.NetworkingV1Api()
+rbac_v1 = client.RbacAuthorizationV1Api()
+api_client = client.ApiClient()
 
 TABLE_NAME = os.environ.get('TABLE_NAME', "callisto_jupyter")
 
 CLIENT = boto3.client("dynamodb")
 DDB = boto3.resource("dynamodb")
 TABLE = DDB.Table(TABLE_NAME)
+
+
+def render_template(template_file, **kwargs):
+    env = Environment(loader=FileSystemLoader("."))
+    template = env.get_template(template_file)
+    return template.render(**kwargs)
+
 
 def create(auth_sub, payload):
     necessary_keys = ["name", "cpu", "memory", "disk"]
@@ -41,7 +72,33 @@ def create(auth_sub, payload):
         "inactivity_time": 15,
     }
     try:
-        TABLE.put_item(Item=jupyter);
+        variables = {
+            'user_namespace': auth_sub,
+            'endpoint_uid': f"{auth_sub}-{created_at}",
+            'cpu_core': int(payload["cpu"]) * 1000,
+            'memory': int(payload["memory"]) * 1024,
+            'storage': payload["disk"],
+            'ecr_uri': ECR_URI,
+            'inactivity_time': 15
+        }
+        rendered_yaml = render_template("jupyter_template.yaml", **variables)
+        with tempfile.NamedTemporaryFile(delete=True, mode='w') as temp_yaml_file:
+            temp_yaml_file.write(rendered_yaml)
+            temp_yaml_file.flush()
+            utils.create_from_yaml(
+                api_client, temp_yaml_file.name, namespace=auth_sub)
+        jupyter["endpoint_url"] = f"https://jupyter.{ROUTE53_DOMAIN}/{auth_sub}-{created_at}"
+    except Exception as e:
+        print(e)
+        return {
+            "statusCode": 500,
+            "body": json.dumps({
+                "message": "Internal server error (Kubernetes Error)",
+                "error": str(e)
+            })
+        }
+    try:
+        TABLE.put_item(Item=jupyter)
         return {
             "statusCode": 201,
             "body": json.dumps({
@@ -58,6 +115,7 @@ def create(auth_sub, payload):
                 "error": str(e)
             })
         }
+
 
 def read(auth_sub, uid):
     sub, created_at = uid.split("@", 1) if "@" in uid else (uid, None)
@@ -76,7 +134,8 @@ def read(auth_sub, uid):
             })
         }
     try:
-        response = TABLE.get_item(Key={"sub": sub, "created_at": int(created_at)})
+        response = TABLE.get_item(
+            Key={"sub": sub, "created_at": int(created_at)})
         if "Item" not in response:
             return {
                 "statusCode": 404,
@@ -84,7 +143,7 @@ def read(auth_sub, uid):
                     "message": "Jupyter not found"
                 })
             }
-        
+
         return {
             "statusCode": 200,
             "body": json.dumps(response["Item"], default=lambda o: int(o) if isinstance(o, Decimal) and o % 1 == 0 else float(o))
@@ -99,9 +158,11 @@ def read(auth_sub, uid):
             })
         }
 
+
 def read_all(auth_sub):
     try:
-        response = TABLE.query(KeyConditionExpression=boto3.dynamodb.conditions.Key("sub").eq(auth_sub))
+        response = TABLE.query(
+            KeyConditionExpression=boto3.dynamodb.conditions.Key("sub").eq(auth_sub))
         return {
             "statusCode": 200,
             "body": json.dumps(response["Items"], default=lambda o: int(o) if isinstance(o, Decimal) and o % 1 == 0 else float(o))
@@ -115,6 +176,7 @@ def read_all(auth_sub):
                 "error": str(e)
             })
         }
+
 
 def update(auth_sub, uid, payload):
     changeable_keys = ["name", "cpu", "memory", "disk", "status"]
@@ -134,7 +196,40 @@ def update(auth_sub, uid, payload):
             })
         }
     try:
-        response = TABLE.get_item(Key={"sub": sub, "created_at": int(created_at)})
+        if "status" in payload:
+            if payload["status"] == "start":
+                apps_v1.patch_namespaced_deployment_scale(
+                    name=f"deployment-{sub}-{created_at}", namespace=sub, body={"spec": {"replicas": 1}})
+        elif "cpu" in payload and "memory" in payload and "disk" in payload:
+            variables = {
+                'user_namespace': sub,
+                'endpoint_uid': f"{sub}-{created_at}",
+                'cpu_core': int(payload["cpu"]) * 1000,
+                'memory': int(payload["memory"]) * 1024,
+                'storage': payload["disk"],
+                'ecr_uri': ECR_URI,
+                'inactivity_time': 15
+            }
+            rendered_yaml = render_template(
+                "jupyter_template.yaml", **variables)
+            with tempfile.NamedTemporaryFile(delete=True, mode='w') as temp_yaml_file:
+                temp_yaml_file.write(rendered_yaml)
+                temp_yaml_file.flush()
+                utils.create_from_yaml(
+                    api_client, temp_yaml_file.name, namespace=sub)
+
+    except Exception as e:
+        print(e)
+        return {
+            "statusCode": 500,
+            "body": json.dumps({
+                "message": "Internal server error (Kubernetes Error)",
+                "error": str(e)
+            })
+        }
+    try:
+        response = TABLE.get_item(
+            Key={"sub": sub, "created_at": int(created_at)})
         if "Item" not in response:
             return {
                 "statusCode": 404,
@@ -142,11 +237,11 @@ def update(auth_sub, uid, payload):
                     "message": "Jupyter not found"
                 })
             }
-       
+
         jupyter = response["Item"]
         for key in changeable_keys:
             if key in payload and payload[key]:
-                # if status, cpu, memory, disk is changed 
+                # if status, cpu, memory, disk is changed
                 jupyter[key] = payload[key]
         TABLE.put_item(Item=jupyter)
         return {
@@ -161,10 +256,11 @@ def update(auth_sub, uid, payload):
         return {
             "statusCode": 500,
             "body": json.dumps({
-                "message": "Internal server error",
+                "message": "Internal server error (DB Error)",
                 "error": str(e)
             })
         }
+
 
 def delete(auth_sub, uid):
     sub, created_at = uid.split("@", 1) if "@" in uid else (uid, None)
@@ -183,7 +279,30 @@ def delete(auth_sub, uid):
             })
         }
     try:
-        response = TABLE.get_item(Key={"sub": sub, "created_at": int(created_at)})
+        v1.delete_namespaced_service(f"service-{sub}-{created_at}", sub)
+        apps_v1.delete_namespaced_deployment(
+            f"deployment-{sub}-{created_at}", sub)
+        v1.delete_namespaced_persistent_volume_claim(
+            f"{sub}-{created_at}-pvc", sub)
+        netwokring_v1.delete_namespaced_ingress(
+            f"ingress-{sub}-{created_at}", sub)
+        v1.delete_namespaced_service_account(f"{sub}-{created_at}-sa", sub)
+        rbac_v1.delete_namespaced_role(
+            f"{sub}-{created_at}-scale-deployment-permission", sub)
+        rbac_v1.delete_namespaced_role_binding(
+            f"{sub}-{created_at}-scale-deployment-permission-binding", sub)
+    except Exception as e:
+        print(e)
+        return {
+            "statusCode": 500,
+            "body": json.dumps({
+                "message": "Internal server error (Kubernetes Error)",
+                "error": str(e)
+            })
+        }
+    try:
+        response = TABLE.get_item(
+            Key={"sub": sub, "created_at": int(created_at)})
         if "Item" not in response:
             return {
                 "statusCode": 404,
@@ -191,7 +310,7 @@ def delete(auth_sub, uid):
                     "message": "Jupyter not found"
                 })
             }
-        
+
         jupyter = response["Item"]
         TABLE.delete_item(Key={"sub": sub, "created_at": int(created_at)})
         return {
@@ -206,10 +325,11 @@ def delete(auth_sub, uid):
         return {
             "statusCode": 500,
             "body": json.dumps({
-                "message": "Internal server error",
+                "message": "Internal server error (DB Error)",
                 "error": str(e)
             })
         }
+
 
 def lambda_handler(event, context):
     method = event.get("httpMethod")
@@ -226,18 +346,21 @@ def lambda_handler(event, context):
         }),
     }
     try:
-        auth_sub = event["requestContext"]["authorizer"]["claims"]["sub"];
+        auth_sub = event["requestContext"]["authorizer"]["claims"]["sub"]
         if method == "POST":
             res.update(create(auth_sub, req_body))
         elif method == "GET":
             if event.get("pathParameters"):
-                res.update(read(auth_sub, event["pathParameters"].get("uid"))) # uid
+                res.update(
+                    read(auth_sub, event["pathParameters"].get("uid")))  # uid
             else:
                 res.update(read_all(auth_sub))
         elif method == "PATCH":
-            res.update(update(auth_sub, event["pathParameters"].get("uid"), req_body))
+            res.update(
+                update(auth_sub, event["pathParameters"].get("uid"), req_body))
         elif method == "DELETE":
-            res.update(delete(auth_sub, event["pathParameters"].get("uid"))) # uid
+            res.update(
+                delete(auth_sub, event["pathParameters"].get("uid")))  # uid
         else:
             res.update({
                 "statusCode": 405,

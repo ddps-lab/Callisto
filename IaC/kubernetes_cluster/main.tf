@@ -1,6 +1,6 @@
 module "vpc" {
   source              = "./vpc"
-  vpc_name            = "callisto-vpc-${var.environment}-${var.random_hex}"
+  vpc_name            = "callisto-vpc-${var.environment}-${var.random_string}"
   vpc_cidr            = var.vpc_cidr
   current_region      = data.aws_region.current_region.name
   region_azs          = data.aws_availability_zones.region_azs.names

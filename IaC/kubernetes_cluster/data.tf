@@ -8,14 +8,6 @@ data "aws_availability_zones" "region_azs" {
   }
 }
 
-provider "aws" {
-  alias = "virginia"
-  region = "us-east-1"
-}
 data "aws_ecrpublic_authorization_token" "token" {
   provider = aws.virginia
-}
-
-data "aws_route53_zone" "route53_zone" {
-  name = "${var.route53_domain}."
 }

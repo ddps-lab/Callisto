@@ -1,172 +1,222 @@
-resource "aws_apigatewayv2_api" "callisto_db_api" {
-  name = "Callisto DB REST-API-${var.environment}-${var.random_hex}"
-  protocol_type = "HTTP"
-  cors_configuration {
-    allow_methods = ["*"]
-    allow_origins = ["*"]
-    allow_headers = ["*"]
-  }
+resource "aws_api_gateway_rest_api" "callisto_db_api" {
+  name = "callisto-db-api-${var.environment}-${var.random_string}"
 }
 
 ### lambda permissions
 resource "aws_lambda_permission" "callisto_ddb_jupyter_api_permission" {
-  statement_id = "AllowAPIGatewayInvoke"
-  action = "lambda:InvokeFunction"
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.callisto-ddb-jupyter-api.function_name
-  principal = "apigateway.amazonaws.com"
-  source_arn = "${aws_apigatewayv2_api.callisto_db_api.execution_arn}/*/*"
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.callisto_db_api.execution_arn}/*/*"
+}
+
+### /jupyter, /jupyter/{uid} resources
+resource "aws_api_gateway_resource" "root_resource" {
+  rest_api_id = aws_api_gateway_rest_api.callisto_db_api.id
+  parent_id   = aws_api_gateway_rest_api.callisto_db_api.root_resource_id
+  path_part   = "api"
 }
 
 
-resource "aws_lambda_permission" "callisto_ddb_users_api_permission" {
-  statement_id = "AllowAPIGatewayInvoke"
-  action = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.callisto-ddb-users-api.function_name
-  principal = "apigateway.amazonaws.com"
-  source_arn = "${aws_apigatewayv2_api.callisto_db_api.execution_arn}/*/*"
+resource "aws_api_gateway_resource" "jupyter_resource" {
+  rest_api_id = aws_api_gateway_rest_api.callisto_db_api.id
+  parent_id   = aws_api_gateway_resource.root_resource.id
+  path_part   = "jupyter"
 }
 
-### integrations
-resource "aws_apigatewayv2_integration" "jupyter_integration" {
-    api_id = aws_apigatewayv2_api.callisto_db_api.id
-    integration_type = "AWS_PROXY"
-    integration_method = "POST"
-    integration_uri = "arn:aws:apigateway:${var.region}:lambda:path/2015-03-31/functions/${aws_lambda_function.callisto-ddb-jupyter-api.arn}/invocations"
-    payload_format_version = "2.0"
+resource "aws_api_gateway_resource" "jupyter_uid_resource" {
+  rest_api_id = aws_api_gateway_rest_api.callisto_db_api.id
+  parent_id   = aws_api_gateway_resource.jupyter_resource.id
+  path_part   = "{uid}"
 }
 
-resource "aws_apigatewayv2_integration" "users_integration" {
-    api_id = aws_apigatewayv2_api.callisto_db_api.id
-    integration_type = "AWS_PROXY"
-    integration_method = "POST"
-    integration_uri = "arn:aws:apigateway:${var.region}:lambda:path/2015-03-31/functions/${aws_lambda_function.callisto-ddb-users-api.arn}/invocations"
-    payload_format_version = "2.0"
+### /jupyter, /jupyter/{uid} methods
+
+resource "aws_api_gateway_method" "any_jupyter_method" {
+  rest_api_id   = aws_api_gateway_rest_api.callisto_db_api.id
+  resource_id   = aws_api_gateway_resource.jupyter_resource.id
+  http_method   = "ANY"
+  authorization = "COGNITO_USER_POOLS"
+  authorizer_id = aws_api_gateway_authorizer.callisto_cognito.id
 }
 
-### routes
-# /jupyter
-resource "aws_apigatewayv2_route" "jupyter_post_route" {
-  api_id = aws_apigatewayv2_api.callisto_db_api.id
-  route_key = "POST /jupyter"
-  target = "integrations/${aws_apigatewayv2_integration.jupyter_integration.id}"
-}
+resource "aws_api_gateway_method_response" "any_jupyter_method_response" {
+  rest_api_id = aws_api_gateway_rest_api.callisto_db_api.id
+  resource_id = aws_api_gateway_resource.jupyter_resource.id
+  http_method = aws_api_gateway_method.any_jupyter_method.http_method
+  status_code = "200"
 
-resource "aws_apigatewayv2_route" "jupyter_get_route" {
-  api_id = aws_apigatewayv2_api.callisto_db_api.id
-  route_key = "GET /jupyter"
-  target = "integrations/${aws_apigatewayv2_integration.jupyter_integration.id}"
-}
-
-resource "aws_apigatewayv2_route" "jupyter_put_id_route" {
-  api_id = aws_apigatewayv2_api.callisto_db_api.id
-  route_key = "PUT /jupyter/{id}"
-  target = "integrations/${aws_apigatewayv2_integration.jupyter_integration.id}"
-}
-
-resource "aws_apigatewayv2_route" "jupyter_get_id_route" {
-  api_id = aws_apigatewayv2_api.callisto_db_api.id
-  route_key = "GET /jupyter/{id}"
-  target = "integrations/${aws_apigatewayv2_integration.jupyter_integration.id}"
-}
-
-resource "aws_apigatewayv2_route" "jupyter_delete_id_route" {
-  api_id = aws_apigatewayv2_api.callisto_db_api.id
-  route_key = "DELETE /jupyter/{id}"
-  target = "integrations/${aws_apigatewayv2_integration.jupyter_integration.id}"
-}
-
-# /users
-resource "aws_apigatewayv2_route" "users_post_route" {
-  api_id = aws_apigatewayv2_api.callisto_db_api.id
-  route_key = "POST /users"
-  target = "integrations/${aws_apigatewayv2_integration.users_integration.id}"
-}
-
-resource "aws_apigatewayv2_route" "users_get_route" {
-  api_id = aws_apigatewayv2_api.callisto_db_api.id
-  route_key = "GET /users"
-  target = "integrations/${aws_apigatewayv2_integration.users_integration.id}"
-}
-
-resource "aws_apigatewayv2_route" "users_put_id_route" {
-  api_id = aws_apigatewayv2_api.callisto_db_api.id
-  route_key = "PUT /users/{id}"
-  target = "integrations/${aws_apigatewayv2_integration.users_integration.id}"
-}
-
-resource "aws_apigatewayv2_route" "users_get_id_route" {
-  api_id = aws_apigatewayv2_api.callisto_db_api.id
-  route_key = "GET /users/{id}"
-  target = "integrations/${aws_apigatewayv2_integration.users_integration.id}"
-}
-
-resource "aws_apigatewayv2_route" "users_delete_id_route" {
-  api_id = aws_apigatewayv2_api.callisto_db_api.id
-  route_key = "DELETE /users/{id}"
-  target = "integrations/${aws_apigatewayv2_integration.users_integration.id}"
-}
-
-### stage deploy
-resource "aws_apigatewayv2_stage" "apigtw_stage" {
-  api_id = aws_apigatewayv2_api.callisto_db_api.id
-  name = "callisto-api-${var.environment}-${var.random_hex}"
-  auto_deploy = true
-}
-
-### DNS mapping
-resource "aws_acm_certificate" "certificate" {
-  domain_name       = "db.api.${var.route53_domain}"
-  validation_method = "DNS"
-}
-
-resource "aws_route53_record" "validation_record" {
-  for_each = {
-    for dvo in aws_acm_certificate.certificate.domain_validation_options : dvo.domain_name => {
-      name   = dvo.resource_record_name
-      record = dvo.resource_record_value
-      type   = dvo.resource_record_type
-    }
-  }
-
-  allow_overwrite = true
-  name            = each.value.name
-  records         = [each.value.record]
-  ttl             = 60
-  type            = each.value.type
-  zone_id         = data.aws_route53_zone.route53_zone.zone_id
-}
-
-resource "aws_acm_certificate_validation" "certificate_validation" {
-  certificate_arn = aws_acm_certificate.certificate.arn
-  validation_record_fqdns = [for record in aws_route53_record.validation_record : record.fqdn]
-}
-
-resource "aws_apigatewayv2_domain_name" "api_domain_name" {
-  domain_name = "db.api.${var.route53_domain}"
-
-  domain_name_configuration {
-    certificate_arn = aws_acm_certificate.certificate.arn
-    endpoint_type   = "REGIONAL"
-    security_policy = "TLS_1_2"
-  }
-
-  depends_on = [ aws_acm_certificate_validation.certificate_validation ]
-}
-
-resource "aws_route53_record" "route53_record" {
-  name    = aws_apigatewayv2_domain_name.api_domain_name.domain_name
-  type    = "A"
-  zone_id = data.aws_route53_zone.route53_zone.zone_id
-
-  alias {
-    name                   = aws_apigatewayv2_domain_name.api_domain_name.domain_name_configuration[0].target_domain_name
-    zone_id                = aws_apigatewayv2_domain_name.api_domain_name.domain_name_configuration[0].hosted_zone_id
-    evaluate_target_health = false
+  response_models = {
+    "application/json" = "Empty"
   }
 }
 
-resource "aws_apigatewayv2_api_mapping" "api_mapping" {
-  api_id = aws_apigatewayv2_api.callisto_db_api.id
-  domain_name = aws_apigatewayv2_domain_name.api_domain_name.id
-  stage = aws_apigatewayv2_stage.apigtw_stage.id
+resource "aws_api_gateway_method" "any_jupyter_uid_method" {
+  rest_api_id   = aws_api_gateway_rest_api.callisto_db_api.id
+  resource_id   = aws_api_gateway_resource.jupyter_uid_resource.id
+  http_method   = "ANY"
+  authorization = "COGNITO_USER_POOLS"
+  authorizer_id = aws_api_gateway_authorizer.callisto_cognito.id
+
+  request_parameters = {
+    "method.request.path.uid" = true
+  }
+}
+
+resource "aws_api_gateway_method_response" "any_jupyter_uid_method_response" {
+  rest_api_id = aws_api_gateway_rest_api.callisto_db_api.id
+  resource_id = aws_api_gateway_resource.jupyter_uid_resource.id
+  http_method = aws_api_gateway_method.any_jupyter_uid_method.http_method
+  status_code = "200"
+
+  response_models = {
+    "application/json" = "Empty"
+  }
+}
+
+resource "aws_api_gateway_method" "options_jupyter_method" {
+  rest_api_id   = aws_api_gateway_rest_api.callisto_db_api.id
+  resource_id   = aws_api_gateway_resource.jupyter_resource.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_method_response" "jupyter_options_lambda_method_response" {
+  rest_api_id = aws_api_gateway_rest_api.callisto_db_api.id
+  resource_id = aws_api_gateway_resource.jupyter_resource.id
+  http_method = aws_api_gateway_method.options_jupyter_method.http_method
+  status_code = "200"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = true
+    "method.response.header.Access-Control-Allow-Methods"     = true
+    "method.response.header.Access-Control-Allow-Origin"      = true
+  }
+
+  response_models = {
+    "application/json" = "Empty"
+  }
+}
+
+resource "aws_api_gateway_method" "options_jupyter_uid_method" {
+  rest_api_id   = aws_api_gateway_rest_api.callisto_db_api.id
+  resource_id   = aws_api_gateway_resource.jupyter_uid_resource.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_method_response" "jupyter_uid_options_lambda_method_response" {
+  rest_api_id = aws_api_gateway_rest_api.callisto_db_api.id
+  resource_id = aws_api_gateway_resource.jupyter_uid_resource.id
+  http_method = aws_api_gateway_method.options_jupyter_uid_method.http_method
+  status_code = "200"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = true
+    "method.response.header.Access-Control-Allow-Methods"     = true
+    "method.response.header.Access-Control-Allow-Origin"      = true
+  }
+
+  response_models = {
+    "application/json" = "Empty"
+  }
+}
+
+### jupyter method integrations
+resource "aws_api_gateway_integration" "jupyter_any_lambda_integration" {
+  rest_api_id             = aws_api_gateway_rest_api.callisto_db_api.id
+  resource_id             = aws_api_gateway_resource.jupyter_resource.id
+  http_method             = aws_api_gateway_method.any_jupyter_method.http_method
+  type                    = "AWS_PROXY"
+  integration_http_method = "POST"
+  uri                     = aws_lambda_function.callisto-ddb-jupyter-api.invoke_arn
+}
+
+resource "aws_api_gateway_integration" "jupyter_uid_any_lambda_integration" {
+  rest_api_id             = aws_api_gateway_rest_api.callisto_db_api.id
+  resource_id             = aws_api_gateway_resource.jupyter_uid_resource.id
+  http_method             = aws_api_gateway_method.any_jupyter_uid_method.http_method
+  type                    = "AWS_PROXY"
+  integration_http_method = "POST"
+  uri                     = aws_lambda_function.callisto-ddb-jupyter-api.invoke_arn
+}
+
+resource "aws_api_gateway_integration" "jupyter_options_lambda_integration" {
+  rest_api_id = aws_api_gateway_rest_api.callisto_db_api.id
+  resource_id = aws_api_gateway_resource.jupyter_resource.id
+  http_method = aws_api_gateway_method.options_jupyter_method.http_method
+  type        = "MOCK"
+
+  request_templates = {
+    "application/json" = jsonencode({
+      statusCode = 200
+    })
+  }
+}
+
+resource "aws_api_gateway_integration_response" "jupyter_options_lambda_integration_response" {
+  rest_api_id = aws_api_gateway_rest_api.callisto_db_api.id
+  resource_id = aws_api_gateway_resource.jupyter_resource.id
+  http_method = aws_api_gateway_method.options_jupyter_method.http_method
+  status_code = aws_api_gateway_method_response.jupyter_options_lambda_method_response.status_code
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token,id-token'"
+    "method.response.header.Access-Control-Allow-Methods"     = "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
+    "method.response.header.Access-Control-Allow-Origin"      = "'*'"
+  }
+}
+
+resource "aws_api_gateway_integration" "jupyter_uid_options_lambda_integration" {
+  rest_api_id = aws_api_gateway_rest_api.callisto_db_api.id
+  resource_id = aws_api_gateway_resource.jupyter_uid_resource.id
+  http_method = aws_api_gateway_method.options_jupyter_uid_method.http_method
+  type        = "MOCK"
+
+  request_templates = {
+    "application/json" = jsonencode({
+      statusCode = 200
+    })
+  }
+}
+
+resource "aws_api_gateway_integration_response" "jupyter_uid_options_lambda_integration_response" {
+  rest_api_id = aws_api_gateway_rest_api.callisto_db_api.id
+  resource_id = aws_api_gateway_resource.jupyter_uid_resource.id
+  http_method = aws_api_gateway_method.options_jupyter_uid_method.http_method
+  status_code = aws_api_gateway_method_response.jupyter_uid_options_lambda_method_response.status_code
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers"     = "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token,id-token'"
+    "method.response.header.Access-Control-Allow-Methods"     = "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
+    "method.response.header.Access-Control-Allow-Origin"      = "'*'"
+  }
+}
+
+
+### Cognito Authorizer
+resource "aws_api_gateway_authorizer" "callisto_cognito" {
+  rest_api_id   = aws_api_gateway_rest_api.callisto_db_api.id
+  name          = "callisto-cognito-${var.environment}-${var.random_string}"
+  type          = "COGNITO_USER_POOLS"
+  identity_source = "method.request.header.Id-Token"
+  provider_arns = [aws_cognito_user_pool.callisto_user_pool.arn]
+}
+
+### api deployment
+resource "aws_api_gateway_deployment" "callisto_db_api_deployment" {
+  rest_api_id = aws_api_gateway_rest_api.callisto_db_api.id
+  stage_name  = var.environment
+  depends_on = [ aws_api_gateway_integration.jupyter_any_lambda_integration,
+                 aws_api_gateway_integration.jupyter_uid_any_lambda_integration,
+                 aws_api_gateway_integration.jupyter_options_lambda_integration,
+                 aws_api_gateway_integration.jupyter_uid_options_lambda_integration,
+                 aws_api_gateway_method.any_jupyter_method,
+                 aws_api_gateway_method.any_jupyter_uid_method,
+                 aws_api_gateway_method.options_jupyter_method,
+                 aws_api_gateway_method.options_jupyter_uid_method,
+                 aws_api_gateway_authorizer.callisto_cognito,
+                 aws_lambda_permission.callisto_ddb_jupyter_api_permission
+               ]
 }

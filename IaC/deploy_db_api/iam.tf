@@ -1,16 +1,16 @@
-resource "null_resource" "download_lambda_codes" {
-    count = length(var.api_list)
-  provisioner "local-exec" {
-    command = <<-EOT
-mkdir /tmp/${var.api_list[count.index]}
-cp ${path.module}/lambda_codes/${var.api_list[count.index]}/index.mjs /tmp/${var.api_list[count.index]}/index.mjs
-zip -j /tmp/${var.api_list[count.index]}.zip /tmp/${var.api_list[count.index]}/index.mjs
-EOT
-  }
-}
+# resource "null_resource" "download_lambda_codes" {
+#     count = length(var.api_list)
+#   provisioner "local-exec" {
+#     command = <<-EOT
+# mkdir /tmp/${var.api_list[count.index]}
+# cp ${path.module}/lambda_codes/${var.api_list[count.index]}/index.mjs /tmp/${var.api_list[count.index]}/index.mjs
+# zip -j /tmp/${var.api_list[count.index]}.zip /tmp/${var.api_list[count.index]}/index.mjs
+# EOT
+#   }
+# }
 
 resource "aws_iam_role" "lambda_api_role" {
-  name = "${var.region}-callisto-db-api-lambda-role-${var.environment}-${var.random_hex}"
+  name = "${var.region}-callisto-db-api-lambda-role-${var.environment}-${var.random_string}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -54,4 +54,24 @@ resource "aws_iam_role_policy_attachment" "dynamodb_policy" {
 resource "aws_iam_role_policy_attachment" "ssm_policy" {
   role       = aws_iam_role.lambda_api_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess"
+}
+
+resource "aws_iam_role_policy_attachment" "eks_workernode_policy" {
+  role       = aws_iam_role.lambda_api_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
+}
+
+resource "aws_eks_access_entry" "eks-access-entry" {
+  cluster_name  = var.eks_cluster_name
+  principal_arn = aws_iam_role.lambda_api_role.arn
+}
+
+resource "aws_eks_access_policy_association" "eks-access-policy" {
+  cluster_name  = var.eks_cluster_name
+  policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+  principal_arn = aws_iam_role.lambda_api_role.arn
+
+  access_scope {
+    type = "cluster"
+  }
 }

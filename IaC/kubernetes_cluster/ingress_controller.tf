@@ -30,7 +30,7 @@ resource "helm_release" "eks-external-dns-integration" {
 
   set {
     name  = "domainFilters[0]"
-    value = data.aws_route53_zone.route53_zone.name
+    value = var.route53_data.name
   }
 
   set {
@@ -72,7 +72,7 @@ module "external_dns_irsa_role" {
 }
 
 resource "aws_acm_certificate" "certificate" {
-  domain_name       = var.route53_domain
+  domain_name       = "jupyter.${var.route53_domain}"
   validation_method = "DNS"
 }
 
@@ -90,7 +90,7 @@ resource "aws_route53_record" "validation_record" {
   records         = [each.value.record]
   ttl             = 60
   type            = each.value.type
-  zone_id         = data.aws_route53_zone.route53_zone.zone_id
+  zone_id         = var.route53_data.zone_id
 
   depends_on = [aws_acm_certificate.certificate]
 }
@@ -114,7 +114,7 @@ resource "helm_release" "nginx-ingress-controller" {
 
   set {
     name  = "controller.service.annotations.external-dns\\.alpha\\.kubernetes\\.io/hostname"
-    value = data.aws_route53_zone.route53_zone.name
+    value = "jupyter.${var.route53_domain}"
   }
 
   set {

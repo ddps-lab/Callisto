@@ -2,8 +2,8 @@ module "karpenter" {
   source                 = "terraform-aws-modules/eks/aws//modules/karpenter"
   cluster_name           = module.eks.cluster_name
   enable_irsa            = true
-  iam_role_name          = "callisto-karpenter-role-${var.random_hex}"
-  node_iam_role_name     = "callisto-karpenter-node-role-${var.random_hex}"
+  iam_role_name          = "callisto-karpenter-role-${var.random_string}"
+  node_iam_role_name     = "callisto-karpenter-node-role-${var.random_string}"
   irsa_oidc_provider_arn = module.eks.oidc_provider_arn
   node_iam_role_additional_policies = {
     AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
@@ -17,8 +17,6 @@ resource "helm_release" "karpenter" {
   create_namespace    = true
   name                = "karpenter"
   repository          = "oci://public.ecr.aws/karpenter"
-  repository_username = data.aws_ecrpublic_authorization_token.token.user_name
-  repository_password = data.aws_ecrpublic_authorization_token.token.password
   chart               = "karpenter"
   version             = "1.0.1"
   wait                = true

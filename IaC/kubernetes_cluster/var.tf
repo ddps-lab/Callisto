@@ -20,5 +20,6 @@ variable "awscli_profile" {}
 variable "environment" {}
 variable "cluster_version" {}
 variable "route53_domain" {}
-variable "random_hex" {}
+variable "random_string" {}
 variable "ami_id" {}
+variable "route53_data" {}
