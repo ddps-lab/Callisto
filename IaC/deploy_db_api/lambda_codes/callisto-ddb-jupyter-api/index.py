@@ -6,6 +6,7 @@ from botocore.exceptions import ClientError
 import os
 import subprocess
 from kubernetes import client, config, utils
+from kubernetes.utils import FailToCreateError
 from kubernetes.client.rest import ApiException
 from jinja2 import Environment, FileSystemLoader
 import tempfile
@@ -119,7 +120,7 @@ def create(auth_sub, payload):
             jupyter["endpoint_url"] = f"https://jupyter.{ROUTE53_DOMAIN}/{auth_sub}-{created_at}"
             try:
                 utils.create_from_yaml(api_client, temp_yaml_file.name, namespace=auth_sub)
-            except ApiException as e:
+            except FailToCreateError as e:
                 if e.status == 409:
                     print("Namespace resource already exists: ", e)
                 else:
@@ -257,7 +258,7 @@ def update(auth_sub, uid, payload):
                 temp_yaml_file.flush()
             try:
                 utils.create_from_yaml(api_client, temp_yaml_file.name, namespace=sub)
-            except ApiException as e:
+            except FailToCreateError as e:
                 if e.status == 409:
                     print("Namespace resource already exists: ", e)
                 else:
