@@ -124,8 +124,8 @@ def create(auth_sub, payload):
                 for cause in e.api_exceptions:
                     if isinstance(cause, ApiException) and cause.status == 409:
                         print("Namespace resource already exists: ", cause)
-                else:
-                    raise e
+                    else:
+                        raise e
     except Exception as e:
         print(e)
         return {
@@ -263,8 +263,8 @@ def update(auth_sub, uid, payload):
                 for cause in e.api_exceptions:
                     if isinstance(cause, ApiException) and cause.status == 409:
                         print("Namespace resource already exists: ", cause)
-                else:
-                    raise e
+                    else:
+                        raise e
     except Exception as e:
         print(e)
         return {
