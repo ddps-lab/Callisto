@@ -117,13 +117,13 @@ def create(auth_sub, payload):
             temp_yaml_file.write(rendered_yaml)
             temp_yaml_file.flush()
             jupyter["endpoint_url"] = f"https://jupyter.{ROUTE53_DOMAIN}/{auth_sub}-{created_at}"
-            utils.create_from_yaml(
-                api_client, temp_yaml_file.name, namespace=auth_sub)
-    except ApiException as e:
-        if e.status == 409:
-            print("Namespace resource already exists: ", e)
-        else:
-            raise e
+            try:
+                utils.create_from_yaml(api_client, temp_yaml_file.name, namespace=auth_sub)
+            except ApiException as e:
+                if e.status == 409:
+                    print("Namespace resource already exists: ", e)
+                else:
+                    raise e
     except Exception as e:
         print(e)
         return {
@@ -251,20 +251,17 @@ def update(auth_sub, uid, payload):
                 "created_at": created_at,
                 "region": REGION
             }
-            rendered_yaml = render_template(
-                "jupyter_template.yaml", **variables)
+            rendered_yaml = render_template("jupyter_template.yaml", **variables)
+            with tempfile.NamedTemporaryFile(delete=True, mode='w') as temp_yaml_file:
+                temp_yaml_file.write(rendered_yaml)
+                temp_yaml_file.flush()
             try:
-                with tempfile.NamedTemporaryFile(delete=True, mode='w') as temp_yaml_file:
-                    temp_yaml_file.write(rendered_yaml)
-                    temp_yaml_file.flush()
-                    utils.create_from_yaml(
-                        api_client, temp_yaml_file.name, namespace=sub)
+                utils.create_from_yaml(api_client, temp_yaml_file.name, namespace=sub)
             except ApiException as e:
                 if e.status == 409:
                     print("Namespace resource already exists: ", e)
                 else:
                     raise e
-
     except Exception as e:
         print(e)
         return {
