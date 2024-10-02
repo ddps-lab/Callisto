@@ -19,7 +19,7 @@ def update_dynamodb_item(table_name, partition_key, partition_value, condition_a
         ConditionExpression=f"{condition_attribute_name} = :cond_val",
         ExpressionAttributeValues={
             ':new_val': update_attribute_value,
-            'cond_val': condition_attribute_value
+            ':cond_val': condition_attribute_value
         },
         ReturnValues="UPDATED_NEW"
     )
