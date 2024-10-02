@@ -46,7 +46,7 @@ def create_iam_policy(policy_name, policy_document):
         PolicyName=policy_name,
         PolicyDocument=json.dumps(policy_document)
     )
-    return response['Policy']['Arn']
+    return response['Policy']['Arn'], response['Policy']['RoleName']
 
 def delete_iam_policy(policy_arn):
     iam_client.delete_policy(

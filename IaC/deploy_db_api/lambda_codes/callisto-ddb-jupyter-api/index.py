@@ -91,11 +91,12 @@ def create(auth_sub, payload):
     try:
         try:
             policy_arn = create_iam_policy(f"callisto-{auth_sub}-ddb-policy", generate_dynamodb_entry_update_policy_document(TABLE_ARN, auth_sub))
-            iam_role_arn = create_iam_role(f"callisto-{auth_sub}-ddb-role", generate_oidc_assume_role_policy(OIDC_PROVIDER, OIDC_PROVIDER_ARN, auth_sub, f"{auth_sub}-{created_at}-sa"))
-            attach_policy_to_role(iam_role_arn, policy_arn)
+            iam_role_name, iam_role_arn = create_iam_role(f"callisto-{auth_sub}-ddb-role", generate_oidc_assume_role_policy(OIDC_PROVIDER, OIDC_PROVIDER_ARN, auth_sub, f"{auth_sub}-{created_at}-sa"))
+            attach_policy_to_role(iam_role_name, policy_arn)
         except ClientError as e:
             if e.response['Error']['Code'] == 'EntityAlreadyExists':
                 iam_role_arn = f"arn:aws:iam::{ACCOUNT_ID}:role/callisto-{auth_sub}-ddb-role"
+                iam_role_name = f"callisto-{auth_sub}-ddb-role"
             else:
                 raise e
         variables = {
