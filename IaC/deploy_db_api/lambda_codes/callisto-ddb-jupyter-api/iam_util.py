@@ -5,7 +5,7 @@ iam_client = boto3.client('iam')
 def create_iam_role(role_name, policy_document):
     response = iam_client.create_role(
         RoleName=role_name,
-        AssumeRolePolicyDocument=policy_document
+        AssumeRolePolicyDocument=json.dumps(policy_document)
     )
     return response['Role']['Arn']
 
@@ -22,7 +22,7 @@ def attach_policy_to_role(role_name, policy_arn):
 
 
 def generate_oidc_assume_role_policy(oidc_provider, oidc_provider_arn, namespace, service_account_name):
-    return json.dumps({
+    return {
         "Version": "2012-10-17",
         "Statement": [
             {
@@ -39,7 +39,7 @@ def generate_oidc_assume_role_policy(oidc_provider, oidc_provider_arn, namespace
                 }
             }
         ]
-    })
+    }
 
 def create_iam_policy(policy_name, policy_document):
     response = iam_client.create_policy(
@@ -54,7 +54,7 @@ def delete_iam_policy(policy_arn):
     )
 
 def generate_dynamodb_entry_update_policy_document(table_arn, uid):
-    return json.dumps({
+    return {
         "Version": "2012-10-17",
         "Statement": [
             {
@@ -71,4 +71,4 @@ def generate_dynamodb_entry_update_policy_document(table_arn, uid):
                 }
             }
         ]
-    })
+    }
