@@ -200,6 +200,7 @@ def update(auth_sub, uid, payload):
             if payload["status"] == "start":
                 apps_v1.patch_namespaced_deployment_scale(
                     name=f"deployment-{sub}-{created_at}", namespace=sub, body={"spec": {"replicas": 1}})
+                payload["status"] = "pending"
         elif "cpu" in payload and "memory" in payload and "disk" in payload:
             variables = {
                 'user_namespace': sub,
