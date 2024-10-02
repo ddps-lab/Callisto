@@ -6,8 +6,10 @@ import boto3
 from .handlers import ActivityHandler
 import os
 
+REGION = os.getenv('REGION', "ap-northeast-2")
+
 def update_dynamodb_item(table_name, partition_key, partition_value, condition_attribute_name, condition_attribute_value, update_attribute_name, update_attribute_value):
-    dynamodb = boto3.resource('dynamodb')
+    dynamodb = boto3.resource('dynamodb', region_name=REGION)
     table = dynamodb.Table(table_name)
     response = table.update_item(
         Key={
