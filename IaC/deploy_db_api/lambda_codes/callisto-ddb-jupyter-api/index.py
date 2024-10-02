@@ -114,9 +114,9 @@ def create(auth_sub, payload):
         with tempfile.NamedTemporaryFile(delete=True, mode='w') as temp_yaml_file:
             temp_yaml_file.write(rendered_yaml)
             temp_yaml_file.flush()
+            jupyter["endpoint_url"] = f"https://jupyter.{ROUTE53_DOMAIN}/{auth_sub}-{created_at}"
             utils.create_from_yaml(
                 api_client, temp_yaml_file.name, namespace=auth_sub)
-        jupyter["endpoint_url"] = f"https://jupyter.{ROUTE53_DOMAIN}/{auth_sub}-{created_at}"
     except ApiException as e:
         if e.status == 409:
             print("Namespace resource already exists: ", e)
@@ -250,11 +250,17 @@ def update(auth_sub, uid, payload):
             }
             rendered_yaml = render_template(
                 "jupyter_template.yaml", **variables)
-            with tempfile.NamedTemporaryFile(delete=True, mode='w') as temp_yaml_file:
-                temp_yaml_file.write(rendered_yaml)
-                temp_yaml_file.flush()
-                utils.create_from_yaml(
-                    api_client, temp_yaml_file.name, namespace=sub)
+            try:
+                with tempfile.NamedTemporaryFile(delete=True, mode='w') as temp_yaml_file:
+                    temp_yaml_file.write(rendered_yaml)
+                    temp_yaml_file.flush()
+                    utils.create_from_yaml(
+                        api_client, temp_yaml_file.name, namespace=sub)
+            except ApiException as e:
+                if e.status == 409:
+                    print("Namespace resource already exists: ", e)
+                else:
+                    raise e
 
     except Exception as e:
         print(e)
