@@ -9,6 +9,15 @@ import {
   updateJupyter
 } from '../../apis/db/index.js';
 
+const BADGE_STATUS = {
+  pending: 'default',
+  running: 'success',
+  stopped: 'error',
+  migrating: 'processing'
+};
+
+const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
+
 export default function Jupyter() {
   const { messageApi } = useMessageApi();
   const { idToken } = useUserStore();
@@ -45,14 +54,22 @@ export default function Jupyter() {
       dataIndex: 'status',
       key: 'status',
       ellipsis: true,
-      render: (item) => <Badge status={'default'} text={item} />
+      render: (item) => (
+        <Badge status={BADGE_STATUS[item]} text={capitalize(item)} />
+      )
     },
     {
       title: 'Endpoint URL',
       dataIndex: 'endpoint_url',
       key: 'endpoint_url',
       ellipsis: true,
-      render: (url) => <a>{url}</a>
+      render: (url) => (
+        <b>
+          <a href={`${url}?id-token=${idToken}`} target="_blank">
+            Open Link
+          </a>
+        </b>
+      )
     },
     {
       title: 'CPU (cores)',
