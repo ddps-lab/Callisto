@@ -121,8 +121,9 @@ def create(auth_sub, payload):
             try:
                 utils.create_from_yaml(api_client, temp_yaml_file.name, namespace=auth_sub)
             except FailToCreateError as e:
-                if e.status == 409:
-                    print("Namespace resource already exists: ", e)
+                for cause in e.api_exceptions:
+                    if isinstance(cause, ApiException) and cause.status == 409:
+                        print("Namespace resource already exists: ", cause)
                 else:
                     raise e
     except Exception as e:
@@ -259,8 +260,9 @@ def update(auth_sub, uid, payload):
             try:
                 utils.create_from_yaml(api_client, temp_yaml_file.name, namespace=sub)
             except FailToCreateError as e:
-                if e.status == 409:
-                    print("Namespace resource already exists: ", e)
+                for cause in e.api_exceptions:
+                    if isinstance(cause, ApiException) and cause.status == 409:
+                        print("Namespace resource already exists: ", cause)
                 else:
                     raise e
     except Exception as e:
