@@ -8,21 +8,20 @@ import os
 
 REGION = os.getenv('REGION', "ap-northeast-2")
 
-def update_dynamodb_status_item(table_name, partition_key, partition_value, condition_attribute_name, condition_attribute_value, update_status_value):
+def update_dynamodb_status_item(table_name, partition_key, partition_value, range_key, range_value, update_status_value):
     dynamodb = boto3.resource('dynamodb', region_name=REGION)
     table = dynamodb.Table(table_name)
     response = table.update_item(
         Key={
-            partition_key: partition_value
+            partition_key: partition_value,
+            range_key: range_value
         },
         UpdateExpression=f"set #status = :new_val",
         ExpressionAttributeNames={
             '#status': 'status'
         },
-        ConditionExpression=f"{condition_attribute_name} = :cond_val",
         ExpressionAttributeValues={
             ':new_val': update_status_value,
-            ':cond_val': condition_attribute_value
         },
         ReturnValues="UPDATED_NEW"
     )
