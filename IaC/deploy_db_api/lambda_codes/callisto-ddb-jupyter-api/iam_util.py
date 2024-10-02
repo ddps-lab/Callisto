@@ -7,7 +7,7 @@ def create_iam_role(role_name, policy_document):
         RoleName=role_name,
         AssumeRolePolicyDocument=json.dumps(policy_document)
     )
-    return response['Role']['Arn']
+    return response['Role']['Arn'], response['Role']['RoleName']
 
 def delete_iam_role(role_name):
     iam_client.delete_role(
@@ -46,7 +46,7 @@ def create_iam_policy(policy_name, policy_document):
         PolicyName=policy_name,
         PolicyDocument=json.dumps(policy_document)
     )
-    return response['Policy']['Arn'], response['Policy']['RoleName']
+    return response['Policy']['Arn']
 
 def delete_iam_policy(policy_arn):
     iam_client.delete_policy(
