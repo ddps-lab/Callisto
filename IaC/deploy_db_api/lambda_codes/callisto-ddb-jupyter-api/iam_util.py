@@ -20,6 +20,11 @@ def attach_policy_to_role(role_name, policy_arn):
         PolicyArn=policy_arn
     )
 
+def detach_policy_from_role(role_name, policy_arn):
+    iam_client.detach_role_policy(
+        RoleName=role_name,
+        PolicyArn=policy_arn
+    )
 
 def generate_oidc_assume_role_policy(oidc_provider, oidc_provider_arn, namespace, service_account_name):
     return {

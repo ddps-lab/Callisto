@@ -327,6 +327,7 @@ def delete(auth_sub, uid):
         }
     try:
         if get_item_count(TABLE_NAME, "sub", sub) == 1:
+            detach_policy_from_role(f"callisto-{sub}-ddb-role", f"arn:aws:iam::{ACCOUNT_ID}:policy/callisto-{sub}-ddb-policy")
             delete_iam_role(f"callisto-{sub}-ddb-role")
             delete_iam_policy(f"arn:aws:iam::{ACCOUNT_ID}:policy/callisto-{sub}-ddb-policy")
         v1.delete_namespaced_service(f"service-{sub}-{created_at}", sub)
