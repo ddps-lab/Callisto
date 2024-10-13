@@ -140,3 +140,27 @@ export const cognitoConfirmSignUp = async (email, code) => {
     };
   }
 };
+
+export const cognitoRefreshAuth = async (refreshToken) => {
+  const params = {
+    AuthFlow: 'REFRESH_TOKEN_AUTH',
+    ClientId,
+    AuthParameters: {
+      REFRESH_TOKEN: refreshToken
+    }
+  };
+
+  const command = new InitiateAuthCommand(params);
+  const result = await cognitoClient.send(command).catch(() => {
+    location.href = '/';
+  });
+
+  const { AuthenticationResult } = result;
+  if (AuthenticationResult) {
+    return {
+      status: COGNITO_SIGN_IN_STATUS.SUCCESS,
+      idToken: AuthenticationResult.IdToken || '',
+      accessToken: AuthenticationResult.AccessToken || ''
+    };
+  } else location.href = '/';
+};

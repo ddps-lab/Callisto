@@ -8,6 +8,9 @@ import {
   getJupyters,
   updateJupyter
 } from '../../apis/db/index.js';
+import { isNAToken } from '../../utils/index.js';
+import { cognitoRefreshAuth } from '../../apis/cognito/index.js';
+import { COGNITO_SIGN_IN_STATUS } from '../../store/constant.js';
 
 const BADGE_STATUS = {
   pending: 'default',
@@ -20,7 +23,7 @@ const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
 
 export default function Jupyter() {
   const { messageApi } = useMessageApi();
-  const { idToken } = useUserStore();
+  const { idToken, setAccessToken, setIdToken } = useUserStore();
   const [data, setData] = useState([]);
   const [fetching, setFetching] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -59,19 +62,6 @@ export default function Jupyter() {
       )
     },
     {
-      title: 'Endpoint URL',
-      dataIndex: 'endpoint_url',
-      key: 'endpoint_url',
-      ellipsis: true,
-      render: (url) => (
-        <b>
-          <a href={`${url}?id-token=${idToken}`} target="_blank">
-            Open Link
-          </a>
-        </b>
-      )
-    },
-    {
       title: 'CPU (cores)',
       dataIndex: 'cpu',
       key: 'cpu',
@@ -89,14 +79,40 @@ export default function Jupyter() {
       dataIndex: 'disk',
       key: 'disk',
       ellipsis: true
+    },
+    {
+      title: 'Access',
+      dataIndex: 'endpoint_url',
+      key: 'endpoint_url',
+      ellipsis: true,
+      render: (url) => (
+        <b>
+          <a href={`${url}?id-token=${idToken}`} target="_blank">
+            Open Link
+          </a>
+        </b>
+      )
     }
   ];
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  const refresh = async (refreshToken) => {
+    const res = await cognitoRefreshAuth(refreshToken);
+    if (res?.status === COGNITO_SIGN_IN_STATUS.SUCCESS) {
+      setAccessToken(res.accessToken);
+      setIdToken(res.idToken);
+    }
+  };
 
-  console.log(selected);
+  useEffect(() => {
+    if (isNAToken(idToken)) {
+      const refreshToken = localStorage.getItem('refreshToken');
+      if (refreshToken) {
+        refresh(refreshToken).then(() => {
+          fetchData();
+        });
+      } else location.href = '/';
+    } else fetchData();
+  }, []);
 
   return (
     <>
@@ -120,20 +136,19 @@ export default function Jupyter() {
             danger
             onClick={async () => {
               setFetching(true);
-              await deleteJupyter(idToken, selected.key)
-                .then(() => {
-                  messageApi.success(
-                    'The Jupyter instance has been successfully deleted.'
-                  );
-                })
-                .catch((e) => {
-                  console.log(e);
-                  messageApi.error(
-                    'An error occurred while deleting the Jupyter instance. Please try again.'
-                  );
-                });
+              const jupyter = await deleteJupyter(idToken, selected.key);
+              if (jupyter) {
+                messageApi.success(
+                  'The Jupyter instance has been successfully deleted.'
+                );
+              } else {
+                messageApi.error(
+                  'An error occurred while deleting the Jupyter instance. Please try again.'
+                );
+              }
               await fetchData();
               setSelected(null);
+              setSelectedRowKeys(null);
               setFetching(false);
               setIsConfirmOpen(false);
             }}
@@ -171,24 +186,24 @@ export default function Jupyter() {
                     key: 'start',
                     onClick: async () => {
                       setFetching(true);
-                      await updateJupyter(idToken, {
+                      const jupyter = await updateJupyter(idToken, {
                         uid: selected.key,
                         status: 'start'
-                      })
-                        .then(() => {
-                          setSelectedRowKeys(null);
-                          setSelected(null);
-                          fetchData();
-                          messageApi.success(
-                            'The Jupyter instance has been successfully started.'
-                          );
-                        })
-                        .catch((e) => {
-                          console.log(e);
-                          messageApi.error(
-                            'An error occurred while starting the Jupyter instance. Please try again.'
-                          );
-                        });
+                      });
+
+                      if (jupyter) {
+                        setSelected(null);
+                        fetchData();
+                        messageApi.success(
+                          'The Jupyter instance has been successfully started.'
+                        );
+                      } else {
+                        messageApi.error(
+                          'An error occurred while starting the Jupyter instance. Please try again.'
+                        );
+                      }
+                      setSelected(null);
+                      setSelectedRowKeys(null);
                       setFetching(false);
                     }
                   },
