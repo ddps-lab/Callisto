@@ -2,8 +2,30 @@ import time
 import threading
 from kubernetes import client, config
 from jupyter_server.utils import url_path_join
+import boto3
 from .handlers import ActivityHandler
 import os
+
+REGION = os.getenv('REGION', "ap-northeast-2")
+
+def update_dynamodb_status_item(table_name, partition_key, partition_value, range_key, range_value, update_status_value):
+    dynamodb = boto3.resource('dynamodb', region_name=REGION)
+    table = dynamodb.Table(table_name)
+    response = table.update_item(
+        Key={
+            partition_key: partition_value,
+            range_key: range_value
+        },
+        UpdateExpression=f"set #status = :new_val",
+        ExpressionAttributeNames={
+            '#status': 'status'
+        },
+        ExpressionAttributeValues={
+            ':new_val': update_status_value,
+        },
+        ReturnValues="UPDATED_NEW"
+    )
+    return response
 
 class ShutdownExtension:
     def __init__(self, serverapp):
@@ -11,13 +33,12 @@ class ShutdownExtension:
         self.last_activity_time = time.time()
         self.timer_thread = threading.Thread(target=self.monitor_activity)
         self.timer_thread.start()
-
-        # inactivity settings
-        self.inactivity_limit = int(os.getenv("INACTIVITY_TIME", "10")) * 60
-
-        # kubernetes settings
+        self.table_name = os.getenv("TABLE_NAME", "table_name")
         self.namespace = os.getenv("NAMESPACE", "default")
+        self.inactivity_limit = int(os.getenv("INACTIVITY_TIME", "10")) * 60
         self.deployment_name = os.getenv("DEPLOYMENT_NAME", "deploymentname")
+        self.created_at = int(os.getenv("CREATED_AT", "0"))
+        update_dynamodb_status_item(self.table_name, "sub", self.namespace, "created_at", self.created_at, "running")
         config.load_incluster_config()
         self.k8s_apps_v1 = client.AppsV1Api()
 
@@ -50,6 +71,7 @@ class ShutdownExtension:
                 if all(kernel['execution_state'] == 'idle' for kernel in kernels):
                     self.is_running = False
                     self.serverapp.log.info("Inactivity detected, Scaling down the kubernetes deployment (JupyterLab).")
+                    update_dynamodb_status_item(self.table_name, "sub", self.namespace, "created_at", self.created_at, "stopped")
                     self.scale_down_deployment()
             time.sleep(60)  # 1분마다 체크
 

@@ -9,6 +9,8 @@ kind: ServiceAccount
 metadata:
   name: {{ endpoint_uid }}-sa
   namespace: {{ user_namespace }}
+  annotations:
+    eks.amazonaws.com/role-arn: {{ iam_role_arn }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -64,7 +66,7 @@ spec:
     spec:
       serviceAccountName: {{ endpoint_uid }}-sa
       securityContext:
-        fsGroup: 1000
+        fsGroup: 100
       containers:
       - image: {{ ecr_uri }}/callisto-jupyter-base-notebook:latest
         imagePullPolicy: Always
@@ -79,6 +81,16 @@ spec:
           value: "deployment-{{ endpoint_uid }}"
         - name: INACTIVITY_TIME
           value: "{{ inactivity_time }}"
+        - name: CREATED_AT
+          value: "{{ created_at }}"
+        - name: TABLE_NAME
+          value: "{{ table_name }}"
+        - name: REGION
+          value: "{{ region }}"
+        - name: PIP_USER
+          value: "true"
+        - name: PIP_TARGET
+          value: "/home/jovyan/.local"
         resources:
             requests:
                 cpu: {{ cpu_core }}m
@@ -87,7 +99,7 @@ spec:
                 cpu: {{ cpu_core }}m
                 memory: {{ memory }}M
         volumeMounts:
-        - mountPath: /home/jovyan/work
+        - mountPath: /home/jovyan
           name: {{ endpoint_uid }}-storage
       volumes:
       - name: {{ endpoint_uid }}-storage

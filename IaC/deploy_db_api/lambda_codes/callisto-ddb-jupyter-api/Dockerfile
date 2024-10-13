@@ -4,6 +4,8 @@ RUN pip install awscli requests kubernetes jinja2 pyyaml --no-cache-dir
 
 COPY jupyter_template.yaml ${LAMBDA_TASK_ROOT}
 
+COPY iam_util.py ${LAMBDA_TASK_ROOT}
+
 COPY index.py ${LAMBDA_TASK_ROOT}
 
 RUN chmod +x /var/task
