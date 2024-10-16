@@ -1,8 +1,9 @@
 import axios from 'axios';
+import { isNAToken } from '../../utils/index.js';
 
 const instance = (idToken) =>
   axios.create({
-    baseURL: "/api",
+    baseURL: 'https://localhost:8080/api',
     headers: {
       'Cache-Control': 'no-cache',
       'Content-Type': 'application/json',
@@ -11,6 +12,10 @@ const instance = (idToken) =>
   });
 
 export const getJupyters = async (idToken) => {
+  if (isNAToken(idToken)) {
+    location.href = '/';
+    return;
+  }
   const response = await instance(idToken)
     .get('/jupyter')
     .catch((e) => {
@@ -21,6 +26,10 @@ export const getJupyters = async (idToken) => {
 };
 
 export const createJupyter = async (idToken, jupyter) => {
+  if (isNAToken(idToken)) {
+    location.href = '/';
+    return;
+  }
   const response = await instance(idToken)
     .post('/jupyter', jupyter)
     .catch((e) => {
@@ -30,6 +39,10 @@ export const createJupyter = async (idToken, jupyter) => {
 };
 
 export const updateJupyter = async (idToken, jupyter) => {
+  if (isNAToken(idToken)) {
+    location.href = '/';
+    return;
+  }
   const response = await instance(idToken)
     .patch(`/jupyter/${jupyter.uid}`, jupyter)
     .catch((e) => {
@@ -39,6 +52,10 @@ export const updateJupyter = async (idToken, jupyter) => {
 };
 
 export const deleteJupyter = async (idToken, jupyterId) => {
+  if (isNAToken(idToken)) {
+    location.href = '/';
+    return;
+  }
   const response = await instance(idToken)
     .delete(`/jupyter/${jupyterId}`)
     .catch((e) => {
