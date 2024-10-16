@@ -35,13 +35,12 @@ export default function Jupyter() {
   const fetchData = async () => {
     setFetching(true);
     const jupyters = await getJupyters(idToken);
-    if (jupyters.length !== 0)
-      setData(
-        jupyters.map((jupyter) => ({
-          ...jupyter,
-          key: `${jupyter.sub}@${jupyter.created_at}`
-        }))
-      );
+    setData(
+      jupyters.map((jupyter) => ({
+        ...jupyter,
+        key: `${jupyter.sub}@${jupyter.created_at}`
+      }))
+    );
     setFetching(false);
   };
 

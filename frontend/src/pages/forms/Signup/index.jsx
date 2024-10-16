@@ -49,11 +49,11 @@ export default function Signup() {
             rules={[
               {
                 required: true,
-                message: 'Please input your Family name!'
+                message: 'Please input your Last name!'
               }
             ]}
           >
-            <Input placeholder="Family name" />
+            <Input placeholder="Last name" />
           </Form.Item>
         </Space.Compact>
       </Form.Item>
