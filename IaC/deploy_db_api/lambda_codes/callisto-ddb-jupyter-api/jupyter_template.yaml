@@ -66,6 +66,7 @@ spec:
     spec:
       serviceAccountName: {{ endpoint_uid }}-sa
       securityContext:
+        runAsUser: 1000
         fsGroup: 100
       containers:
       - image: {{ ecr_uri }}/callisto-jupyter-base-notebook:latest
