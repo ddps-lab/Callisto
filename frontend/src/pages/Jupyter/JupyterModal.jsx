@@ -97,7 +97,7 @@ export default function JupyterModal(props) {
           onClick={isUpdate ? handleUpdateJupyter : handleCreateJupyter}
           loading={loading}
         >
-          Create
+          {isUpdate ? 'Modify' : 'Create'}
         </Button>
       ]}
     >

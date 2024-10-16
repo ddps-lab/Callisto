@@ -34,17 +34,6 @@ export default function Signup() {
       >
         <Space.Compact>
           <Form.Item
-            name="familyName"
-            rules={[
-              {
-                required: true,
-                message: 'Please input your Family name!'
-              }
-            ]}
-          >
-            <Input placeholder="Family name" />
-          </Form.Item>
-          <Form.Item
             name="firstname"
             rules={[
               {
@@ -53,7 +42,18 @@ export default function Signup() {
               }
             ]}
           >
-            <Input placeholder="Name" />
+            <Input placeholder="First Name" />
+          </Form.Item>
+          <Form.Item
+            name="familyName"
+            rules={[
+              {
+                required: true,
+                message: 'Please input your Last name!'
+              }
+            ]}
+          >
+            <Input placeholder="Last name" />
           </Form.Item>
         </Space.Compact>
       </Form.Item>

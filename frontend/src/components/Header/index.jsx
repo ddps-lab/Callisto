@@ -1,4 +1,4 @@
-import { QuestionCircleOutlined, SettingOutlined } from '@ant-design/icons';
+import { LogoutOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import { Button, Layout } from 'antd';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
@@ -48,9 +48,9 @@ const User = styled.div`
   }
 `;
 
-export default function Header(props) {
+export default function Header() {
   const navigate = useNavigate();
-  const { userInfo } = useUserStore();
+  const { userInfo, logout } = useUserStore();
   return (
     <Layout.Header style={{ display: 'flex' }}>
       <Logo
@@ -70,7 +70,12 @@ export default function Header(props) {
           <Button
             size={'small'}
             type={'text'}
-            icon={<SettingOutlined className={'outline-white'} />}
+            icon={<LogoutOutlined className={'outline-white'} />}
+            onClick={() => {
+              logout();
+              localStorage.clear();
+              navigate('/');
+            }}
           />
         </ButtonGroup>
         <User>
