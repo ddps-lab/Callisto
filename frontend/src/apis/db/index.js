@@ -3,7 +3,7 @@ import { isNAToken } from '../../utils/index.js';
 
 const instance = (idToken) =>
   axios.create({
-    baseURL: 'https://localhost:8080/api',
+    baseURL: '/api',
     headers: {
       'Cache-Control': 'no-cache',
       'Content-Type': 'application/json',
