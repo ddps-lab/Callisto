@@ -64,16 +64,14 @@ spec:
       labels:
         app.kubernetes.io/name: app-{{ endpoint_uid }}
     spec:
-      serviceAccountName: {{ endpoint_uid }}-sa
       securityContext:
-        runAsUser: 1000
         fsGroup: 100
-        fsGroupChangePolicy: Always
+      serviceAccountName: {{ endpoint_uid }}-sa
       containers:
       - image: {{ ecr_uri }}/callisto-jupyter-base-notebook:latest
         imagePullPolicy: Always
         name: app-{{ endpoint_uid }}
-        command: ["start-notebook.sh", "--NotebookApp.token=''", "--NotebookApp.password=''", "--NotebookApp.base_url=/{{ endpoint_uid }}", "--NotebookApp.allow_remote_access=True", "--NotebookApp.allow_origin='*'", "--NotebookApp.trust_xheaders=True"]
+        command: ["start-notebook.sh", "--NotebookApp.token=''", "--NotebookApp.password=''", "--NotebookApp.base_url=/{{ endpoint_uid }}", "--NotebookApp.allow_remote_access=True", "--NotebookApp.allow_origin='*'", "--NotebookApp.trust_xheaders=True", "--NotebookApp.notebook_dir=/home/jovyan"]
         ports:
         - containerPort: 8888
         env:
@@ -100,13 +98,9 @@ spec:
             limits:
                 cpu: {{ cpu_core }}m
                 memory: {{ memory }}M
-        volumeMounts:
-        - mountPath: /home/jovyan
-          name: {{ endpoint_uid }}-storage
-      initContainers:
-      - name: volume-permission-fix
-        image: busybox
-        command: ["sh", "-c", "chown -R 1000:100 /home/jovyan"]
+        securityContext:
+          runAsUser: 1000
+          runAsGroup: 100
         volumeMounts:
         - mountPath: /home/jovyan
           name: {{ endpoint_uid }}-storage
