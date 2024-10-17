@@ -10,6 +10,7 @@ import {
   useUserStore
 } from '../../../store/zustand.js';
 import { COGNITO_SIGN_IN_STATUS } from '../../../store/constant.js';
+import { Cookies } from 'react-cookie';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -18,10 +19,14 @@ export default function Login() {
   const challengeStore = useChallengeStore();
   const confirmStore = useConfirmStore();
   const { messageApi } = useMessageApi();
+  const cookies = new Cookies();
 
   const onFinish = async (values) => {
     const result = await cognitoSignIn(values);
     if (result.status === COGNITO_SIGN_IN_STATUS.SUCCESS) {
+      cookies.set('idToken', result.idToken);
+      cookies.set('accessToken', result.accessToken);
+      cookies.set('refreshToken', result.refreshToken);
       userStore.setIdToken(result.idToken);
       userStore.setAccessToken(result.accessToken);
       navigate('/overview');
