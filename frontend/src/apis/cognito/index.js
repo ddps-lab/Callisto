@@ -41,7 +41,8 @@ export const cognitoSignIn = async (args) => {
       return {
         status: COGNITO_SIGN_IN_STATUS.SUCCESS,
         idToken: AuthenticationResult.IdToken || '',
-        accessToken: AuthenticationResult.AccessToken || ''
+        accessToken: AuthenticationResult.AccessToken || '',
+        refreshToken: AuthenticationResult.RefreshToken || ''
       };
     } else if (ChallengeName && Session) {
       return {
@@ -141,6 +142,7 @@ export const cognitoConfirmSignUp = async (email, code) => {
   }
 };
 
+// Refresh Token Usage (with @aws-sdk/client-cognito-identity-provider)
 export const cognitoRefreshAuth = async (refreshToken) => {
   const params = {
     AuthFlow: 'REFRESH_TOKEN_AUTH',
