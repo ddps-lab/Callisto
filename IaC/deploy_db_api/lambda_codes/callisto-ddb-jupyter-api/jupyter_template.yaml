@@ -89,8 +89,6 @@ spec:
           value: "{{ region }}"
         - name: PIP_USER
           value: "true"
-        - name: PIP_TARGET
-          value: "/home/jovyan/.local"
         resources:
             requests:
                 cpu: {{ cpu_core }}m
