@@ -19,6 +19,8 @@ resource "helm_release" "karpenter" {
   repository          = "oci://public.ecr.aws/karpenter"
   chart               = "karpenter"
   version             = "1.0.1"
+  repository_username = data.aws_ecrpublic_authorization_token.token.user_name
+  repository_password = data.aws_ecrpublic_authorization_token.token.password
   wait                = true
 
   values = [
@@ -35,7 +37,8 @@ resource "helm_release" "karpenter" {
     #     operator: Equal
     #     value: fargate
     #     effect: "NoSchedule"
-    nodeSelector: {}
+    nodeSelector:
+      eks.amazonaws.com/nodegroup: ${split(":", module.eks.eks_managed_node_groups.callisto_addon_ec2.node_group_id)[1]}
     replicas: 1
     logLevel: debug
     EOT
