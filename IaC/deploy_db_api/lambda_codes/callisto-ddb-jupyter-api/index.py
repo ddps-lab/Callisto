@@ -91,13 +91,13 @@ def create(auth_sub, payload):
     }
     try:
         try:
-            policy_arn = create_iam_policy(f"callisto-{auth_sub}-ddb-policy", generate_dynamodb_entry_update_policy_document(TABLE_ARN, auth_sub))
-            iam_role_arn, iam_role_name = create_iam_role(f"callisto-{auth_sub}-ddb-role", generate_oidc_assume_role_policy(OIDC_PROVIDER, OIDC_PROVIDER_ARN, auth_sub, f"{auth_sub}-{created_at}-sa"))
+            policy_arn = create_iam_policy(f"callisto-{auth_sub}-{created_at}-ddb-policy", generate_dynamodb_entry_update_policy_document(TABLE_ARN, auth_sub))
+            iam_role_arn, iam_role_name = create_iam_role(f"callisto-{auth_sub}-{created_at}-ddb-role", generate_oidc_assume_role_policy(OIDC_PROVIDER, OIDC_PROVIDER_ARN, auth_sub, f"{auth_sub}-{created_at}-sa"))
             attach_policy_to_role(iam_role_name, policy_arn)
         except ClientError as e:
             if e.response['Error']['Code'] == 'EntityAlreadyExists':
-                iam_role_arn = f"arn:aws:iam::{ACCOUNT_ID}:role/callisto-{auth_sub}-ddb-role"
-                iam_role_name = f"callisto-{auth_sub}-ddb-role"
+                iam_role_arn = f"arn:aws:iam::{ACCOUNT_ID}:role/callisto-{auth_sub}-{created_at}-ddb-role"
+                iam_role_name = f"callisto-{auth_sub}-{created_at}-ddb-role"
             else:
                 raise e
         variables = {
@@ -248,7 +248,7 @@ def update(auth_sub, uid, payload):
                 'storage': payload["disk"],
                 'ecr_uri': ECR_URI,
                 'inactivity_time': 15,
-                'iam_role_arn': f"arn:aws:iam::{ACCOUNT_ID}:role/callisto-{sub}-ddb-role",
+                'iam_role_arn': f"arn:aws:iam::{ACCOUNT_ID}:role/callisto-{sub}-{created_at}-ddb-role",
                 "table_name": TABLE_NAME,
                 "created_at": created_at,
                 "region": REGION
@@ -327,9 +327,9 @@ def delete(auth_sub, uid):
         }
     try:
         if get_item_count(TABLE_NAME, "sub", sub) == 1:
-            detach_policy_from_role(f"callisto-{sub}-ddb-role", f"arn:aws:iam::{ACCOUNT_ID}:policy/callisto-{sub}-ddb-policy")
-            delete_iam_role(f"callisto-{sub}-ddb-role")
-            delete_iam_policy(f"arn:aws:iam::{ACCOUNT_ID}:policy/callisto-{sub}-ddb-policy")
+            detach_policy_from_role(f"callisto-{sub}-{created_at}-ddb-role", f"arn:aws:iam::{ACCOUNT_ID}:policy/callisto-{sub}-{created_at}-ddb-policy")
+            delete_iam_role(f"callisto-{sub}-{created_at}-ddb-role")
+            delete_iam_policy(f"arn:aws:iam::{ACCOUNT_ID}:policy/callisto-{sub}-{created_at}-ddb-policy")
         v1.delete_namespaced_service(f"service-{sub}-{created_at}", sub)
         apps_v1.delete_namespaced_deployment(
             f"deployment-{sub}-{created_at}", sub)
