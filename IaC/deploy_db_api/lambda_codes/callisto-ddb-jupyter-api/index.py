@@ -117,7 +117,7 @@ def create(auth_sub, payload):
         with tempfile.NamedTemporaryFile(delete=True, mode='w') as temp_yaml_file:
             temp_yaml_file.write(rendered_yaml)
             temp_yaml_file.flush()
-            jupyter["endpoint_url"] = f"https://jupyter.{ROUTE53_DOMAIN}/{auth_sub}-{created_at}"
+            jupyter["endpoint_url"] = f"https://{ROUTE53_DOMAIN}/api/jupyter-access/{auth_sub}-{created_at}"
             try:
                 utils.create_from_yaml(api_client, temp_yaml_file.name, namespace=auth_sub)
             except FailToCreateError as e:
