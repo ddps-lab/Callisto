@@ -36,11 +36,11 @@ class ShutdownExtension:
         self.inactivity_limit = int(os.getenv("INACTIVITY_TIME", "10")) * 60
         self.deployment_name = os.getenv("DEPLOYMENT_NAME", "deploymentname")
         self.created_at = int(os.getenv("CREATED_AT", "0"))
-        self.timer_thread = threading.Thread(target=self.monitor_activity)
-        self.timer_thread.start()
         update_dynamodb_status_item(self.table_name, "sub", self.namespace, "created_at", self.created_at, "running")
         config.load_incluster_config()
         self.k8s_apps_v1 = client.AppsV1Api()
+        self.timer_thread = threading.Thread(target=self.monitor_activity)
+        self.timer_thread.start()
 
     def update_last_activity_time(self, activity_time):
         self.last_activity_time = activity_time
