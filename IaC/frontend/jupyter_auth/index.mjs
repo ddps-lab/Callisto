@@ -106,7 +106,7 @@ function setTokensInCookies(tokens, headers) {
 
 function errorResponse() {
     return {
-        status: '403',
+        status: '401',
         statusDescription: 'Forbidden',
         body: 'Unauthorized'
     };
