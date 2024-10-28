@@ -86,7 +86,7 @@ export default function Jupyter() {
       ellipsis: true,
       render: (url) => (
         <b>
-          <a href={`${url}?id-token=${idToken}`} target="_blank">
+          <a href={`${url}`} target="_blank">
             Open Link
           </a>
         </b>
