@@ -1,41 +1,61 @@
+data "aws_ec2_managed_prefix_list" "cloudfront_prefix_list" {
+  name = "com.amazonaws.global.cloudfront.origin-facing"
+}
 
-resource "helm_release" "eks-external-dns-integration" {
-  namespace        = "external-dns"
-  create_namespace = true
-  name             = "external-dns"
-  repository       = "https://charts.bitnami.com/bitnami"
-  chart            = "external-dns"
-  version          = "8.3.5"
-  wait             = true
+resource "aws_security_group" "nlb_sg" {
+  ingress = [{
+    cidr_blocks      = []
+    description      = "cloudfront only"
+    from_port        = 80
+    to_port          = 80
+    protocol         = "tcp"
+    ipv6_cidr_blocks = []
+    prefix_list_ids  = [data.aws_ec2_managed_prefix_list.cloudfront_prefix_list.id]
+    security_groups  = []
+    self             = false
+    }]
 
-  set {
-    name  = "provider"
-    value = "aws"
+  egress = [{
+    cidr_blocks      = ["0.0.0.0/0"]
+    description      = "alow all outbound"
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    ipv6_cidr_blocks = []
+    prefix_list_ids  = []
+    security_groups  = []
+    self             = false
+  }]
+  vpc_id = module.vpc.vpc.id
+
+  tags = {
+    "Name" = "callisto-nlb-sg-${var.environment}-${var.random_string}"
   }
+}
 
-  set {
-    name  = "aws.zoneType"
-    value = "public"
+module "loadbalancer_controller_irsa_role" {
+  source = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+
+  role_name             = "${var.cluster_name}-lb-controller-sa-role"
+  attach_load_balancer_controller_policy = true
+
+  oidc_providers = {
+    ex = {
+      provider_arn               = module.eks.oidc_provider_arn
+      namespace_service_accounts = ["kube-system:aws-load-balancer-controller-sa"]
+    }
   }
+}
+resource "helm_release" "aws-load-balancer-controller" {
+  namespace = "kube-system"
+  name = "aws-load-balancer-controller"
+  chart = "aws-load-balancer-controller"
+  repository = "https://aws.github.io/eks-charts"
+  wait = true
 
   set {
-    name  = "aws.region"
-    value = var.region
-  }
-
-  set {
-    name  = "txtOwnerId"
+    name  = "clusterName"
     value = module.eks.cluster_name
-  }
-
-  set {
-    name  = "domainFilters[0]"
-    value = var.route53_data.name
-  }
-
-  set {
-    name  = "policy"
-    value = "sync"
   }
 
   set {
@@ -45,63 +65,26 @@ resource "helm_release" "eks-external-dns-integration" {
 
   set {
     name  = "serviceAccount.name"
-    value = "external-dns-sa"
+    value = "aws-load-balancer-controller-sa"
   }
 
   set {
-    name  = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
-    value = module.external_dns_irsa_role.iam_role_arn
+    name = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
+    value = module.loadbalancer_controller_irsa_role.iam_role_arn
   }
 
-  depends_on = [module.eks, null_resource.update-kubeconfig, module.external_dns_irsa_role]
-}
-
-
-module "external_dns_irsa_role" {
-  source = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-
-  role_name = "${var.cluster_name}-external-dns"
-
-  attach_external_dns_policy = true
-  oidc_providers = {
-    ex = {
-      provider_arn               = module.eks.oidc_provider_arn
-      namespace_service_accounts = ["external-dns:external-dns-sa"]
-    }
-  }
-}
-
-resource "aws_acm_certificate" "certificate" {
-  domain_name       = "jupyter.${var.route53_domain}"
-  validation_method = "DNS"
-}
-
-resource "aws_route53_record" "validation_record" {
-  for_each = {
-    for dvo in aws_acm_certificate.certificate.domain_validation_options : dvo.domain_name => {
-      name   = dvo.resource_record_name
-      record = dvo.resource_record_value
-      type   = dvo.resource_record_type
-    }
+  set {
+    name = "replicaCount"
+    value = "1"
   }
 
-  allow_overwrite = true
-  name            = each.value.name
-  records         = [each.value.record]
-  ttl             = 60
-  type            = each.value.type
-  zone_id         = var.route53_data.zone_id
-
-  depends_on = [aws_acm_certificate.certificate]
+  set {
+    name = "nodeSelector.eks\\.amazonaws\\.com/nodegroup"
+    value = "${split(":", module.eks.eks_managed_node_groups.callisto_addon_ec2.node_group_id)[1]}"
+  }
+  
+  depends_on = [ module.loadbalancer_controller_irsa_role ]
 }
-
-resource "aws_acm_certificate_validation" "certificate_validation" {
-  certificate_arn         = aws_acm_certificate.certificate.arn
-  validation_record_fqdns = [for record in aws_route53_record.validation_record : record.fqdn]
-
-  depends_on = [aws_route53_record.validation_record]
-}
-
 
 resource "helm_release" "nginx-ingress-controller" {
   namespace        = "ingress-nginx"
@@ -113,33 +96,28 @@ resource "helm_release" "nginx-ingress-controller" {
   wait             = true
 
   set {
-    name  = "controller.service.annotations.external-dns\\.alpha\\.kubernetes\\.io/hostname"
-    value = "jupyter.${var.route53_domain}"
-  }
-
-  set {
-    name  = "controller.service.annotations.service\\.beta\\.kubernetes\\.io/aws-load-balancer-backend-type"
+    name  = "controller.service.annotations.service\\.beta\\.kubernetes\\.io/aws-load-balancer-type"
     value = "nlb"
   }
 
   set {
-    name  = "controller.service.annotations.service\\.beta\\.kubernetes\\.io/aws-load-balancer-backend-scheme"
+    name  = "controller.service.annotations.service\\.beta\\.kubernetes\\.io/aws-load-balancer-scheme"
     value = "internet-facing"
   }
 
   set {
-    name  = "controller.service.annotations.service\\.beta\\.kubernetes\\.io/aws-load-balancer-backend-protocol"
-    value = "tcp"
+    name  = "controller.service.annotations.service\\.beta\\.kubernetes\\.io/aws-load-balancer-manage-backend-security-group-rules"
+    value = "true"
   }
 
   set {
-    name  = "controller.service.annotations.service\\.beta\\.kubernetes\\.io/aws-load-balancer-ssl-ports"
-    value = "https"
+    name  = "controller.service.annotations.service\\.beta\\.kubernetes\\.io/aws-load-balancer-security-groups"
+    value = "${aws_security_group.nlb_sg.id}"
   }
 
   set {
-    name  = "controller.service.annotations.service\\.beta\\.kubernetes\\.io/aws-load-balancer-ssl-cert"
-    value = aws_acm_certificate.certificate.arn
+    name = "controller.service.annotations.service\\.beta\\.kubernetes\\.io/aws-load-balancer-name"
+    value = "callisto-nlb-${var.environment}-${var.random_string}"
   }
 
   set {
@@ -157,5 +135,17 @@ resource "helm_release" "nginx-ingress-controller" {
     value = "0"
   }
 
-  depends_on = [module.eks, null_resource.update-kubeconfig, helm_release.eks-external-dns-integration, aws_acm_certificate_validation.certificate_validation]
+  depends_on = [module.eks, null_resource.update-kubeconfig, helm_release.aws-load-balancer-controller]
+}
+
+resource "null_resource" "save-nlb-dns-name" {
+  triggers = {
+    cluster_name = module.eks.cluster_name
+  }
+  provisioner "local-exec" {
+    when    = create
+    command = "sleep 10; kubectl get svc -n ingress-nginx ingress-nginx-controller | tail -n1 | awk {'printf $4'} > ${path.module}/../../nlb_dns_name.txt"
+  }
+
+  depends_on = [module.eks, null_resource.update-kubeconfig, helm_release.nginx-ingress-controller]
 }

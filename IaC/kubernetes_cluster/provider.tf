@@ -4,7 +4,10 @@ resource "null_resource" "update-kubeconfig" {
   }
   provisioner "local-exec" {
     when    = create
-    command = "aws eks update-kubeconfig --name ${var.cluster_name} --profile ${var.awscli_profile} --region ${var.region}"
+    command = <<-EOF
+      aws eks update-kubeconfig --name ${var.cluster_name} --profile ${var.awscli_profile} --region ${var.region} && \
+      aws eks update-kubeconfig --name ${var.cluster_name} --profile ${var.awscli_profile} --region ${var.region} --kubeconfig ~/.kube/config-eks-${var.cluster_name}
+    EOF
   }
 
   depends_on = [module.eks]

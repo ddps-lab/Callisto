@@ -71,7 +71,7 @@ spec:
       - image: {{ ecr_uri }}/callisto-jupyter-base-notebook:latest
         imagePullPolicy: Always
         name: app-{{ endpoint_uid }}
-        command: ["start-notebook.sh", "--NotebookApp.token=''", "--NotebookApp.password=''", "--NotebookApp.base_url=/{{ endpoint_uid }}", "--NotebookApp.allow_remote_access=True", "--NotebookApp.allow_origin='*'", "--NotebookApp.trust_xheaders=True", "--NotebookApp.notebook_dir=/home/jovyan"]
+        command: ["start-notebook.sh", "--NotebookApp.token=''", "--NotebookApp.password=''", "--NotebookApp.base_url=/api/jupyter-access/{{ endpoint_uid }}", "--NotebookApp.allow_remote_access=True", "--NotebookApp.allow_origin='*'", "--NotebookApp.trust_xheaders=True", "--NotebookApp.notebook_dir=/home/jovyan"]
         ports:
         - containerPort: 8888
         env:
@@ -89,8 +89,6 @@ spec:
           value: "{{ region }}"
         - name: PIP_USER
           value: "true"
-        - name: PIP_TARGET
-          value: "/home/jovyan/.local"
         resources:
             requests:
                 cpu: {{ cpu_core }}m
@@ -140,7 +138,7 @@ spec:
   rules:
     - http:
         paths:
-        - path: /{{ endpoint_uid }}
+        - path: /api/jupyter-access/{{ endpoint_uid }}
           pathType: Prefix
           backend:
             service:

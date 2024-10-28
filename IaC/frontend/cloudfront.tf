@@ -121,6 +121,22 @@ resource "aws_cloudfront_origin_request_policy" "api_gateway_request_policy" {
   }
 }
 
+resource "aws_cloudfront_origin_request_policy" "nlb_request_policy" {
+  name = "nlb-origin-request-policy-${var.random_string}"
+
+  headers_config {
+    header_behavior = "allViewer"
+  }
+
+  query_strings_config {
+    query_string_behavior = "all"
+  }
+
+  cookies_config {
+    cookie_behavior = "all"
+  }
+}
+
 resource "aws_cloudfront_distribution" "distribution" {
   origin {
     domain_name = aws_s3_bucket.callisto_web_bucket.bucket_regional_domain_name
@@ -143,6 +159,18 @@ resource "aws_cloudfront_distribution" "distribution" {
     }
   }
 
+  origin {
+    domain_name = data.local_file.nlb_dns_name.content
+    origin_id = "NLB-Origin"
+
+    custom_origin_config {
+      http_port              = "80"
+      https_port             = "443"
+      origin_protocol_policy = "http-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+  }
+
   enabled             = true
   is_ipv6_enabled     = true
   default_root_object = "index.html"
@@ -160,6 +188,21 @@ resource "aws_cloudfront_distribution" "distribution" {
     min_ttl                    = 0
     default_ttl                = 3600
     max_ttl                    = 86400
+  }
+
+  ordered_cache_behavior {
+    path_pattern           = "/api/jupyter-access/*"
+    target_origin_id       = "NLB-Origin"
+    viewer_protocol_policy = "redirect-to-https"
+    allowed_methods        = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
+    cached_methods         = ["GET", "HEAD"]
+
+    default_ttl = 0
+    max_ttl     = 0
+    min_ttl     = 0
+    
+    cache_policy_id          = aws_cloudfront_cache_policy.cache_disabled_policy.id
+    origin_request_policy_id = aws_cloudfront_origin_request_policy.nlb_request_policy.id
   }
 
   ordered_cache_behavior {
