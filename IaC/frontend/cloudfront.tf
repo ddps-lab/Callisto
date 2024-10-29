@@ -161,7 +161,7 @@ resource "aws_cloudfront_distribution" "distribution" {
 
   origin {
     domain_name = data.local_file.nlb_dns_name.content
-    origin_id = "NLB-Origin"
+    origin_id   = "NLB-Origin"
 
     custom_origin_config {
       http_port              = "80"
@@ -200,9 +200,14 @@ resource "aws_cloudfront_distribution" "distribution" {
     default_ttl = 0
     max_ttl     = 0
     min_ttl     = 0
-    
+
     cache_policy_id          = aws_cloudfront_cache_policy.cache_disabled_policy.id
     origin_request_policy_id = aws_cloudfront_origin_request_policy.nlb_request_policy.id
+
+    lambda_function_association {
+      event_type = "viewer-request"
+      lambda_arn = aws_lambda_function.jupyter_auth_lambda.qualified_arn
+    }
   }
 
   ordered_cache_behavior {
@@ -215,7 +220,7 @@ resource "aws_cloudfront_distribution" "distribution" {
     default_ttl = 0
     max_ttl     = 0
     min_ttl     = 0
-    
+
     cache_policy_id          = aws_cloudfront_cache_policy.cache_disabled_policy.id
     origin_request_policy_id = aws_cloudfront_origin_request_policy.api_gateway_request_policy.id
   }

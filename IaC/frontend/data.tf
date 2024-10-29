@@ -4,3 +4,5 @@ data "aws_route53_zone" "route53_zone" {
 data local_file "nlb_dns_name" {
   filename = "${path.module}/../../nlb_dns_name.txt"
 }
+
+data "aws_caller_identity" "current" {}
