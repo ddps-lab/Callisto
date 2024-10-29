@@ -65,5 +65,6 @@ resource "aws_lambda_function" "jupyter_auth_lambda" {
   filename      = "${path.module}/jupyter_auth/jupyter_auth_lambda.zip"
   publish       = true
   provider      = aws.virginia
+  timeout       = 5
   depends_on    = [null_resource.compress_lambda_code]
 }
