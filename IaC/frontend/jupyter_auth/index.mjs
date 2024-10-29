@@ -1,11 +1,14 @@
 import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm';
 import { CognitoIdentityProviderClient, AdminInitiateAuthCommand } from '@aws-sdk/client-cognito-identity-provider';
 import jwt from 'jsonwebtoken';
+import axios from 'axios';
+import jwkToPem from 'jwk-to-pem';
 
 let ssmClient;
 let cognitoClient;
 
-let REGION, USER_POOL_ID, CLIENT_ID;
+let REGION, USER_POOL_ID, CLIENT_ID, JWK_URL;
+let pemCache = {};
 let initialized = false;
 
 async function initializeCognitoConfig() {
@@ -16,6 +19,9 @@ async function initializeCognitoConfig() {
         CLIENT_ID = await getParameter('/callisto/cognito_client_id');
 
         cognitoClient = new CognitoIdentityProviderClient({ region: REGION });
+        JWK_URL = `https://cognito-idp.${REGION}.amazonaws.com/${USER_POOL_ID}/.well-known/jwks.json`;
+
+        await cacheJwksAsPem();
 
         initialized = true;
     }
@@ -27,36 +33,42 @@ async function getParameter(name) {
     return response.Parameter.Value;
 }
 
+async function cacheJwksAsPem() {
+    const response = await axios.get(JWK_URL);
+    const jwks = response.data.keys;
+    jwks.forEach((jwk) => {
+        pemCache[jwk.kid] = jwkToPem(jwk);
+    });
+}
+
 export const handler = async (event) => {
     await initializeCognitoConfig();
 
     const request = event.Records[0].cf.request;
     const headers = request.headers;
 
-    // 1. 쿠키에서 토큰 추출
+    const uuid = extractUuidFromPath(request.uri);
+
     const idToken = extractTokenFromCookie(headers, 'idToken');
     const accessToken = extractTokenFromCookie(headers, 'accessToken');
     const refreshToken = extractTokenFromCookie(headers, 'refreshToken');
 
-    if (accessToken && isTokenValid(accessToken)) {
-        return request; // 유효한 경우 그대로 전달
-    }
-
-    // 3. accessToken이 만료된 경우 refreshToken을 사용하여 재발급
-    if (refreshToken) {
+    const tokenValidationResult = await isTokenValid(idToken, uuid);
+    if (tokenValidationResult === "TokenExpired" && refreshToken) {
         try {
             const newTokens = await refreshTokensWithAwsSdk(refreshToken);
             setTokensInCookies(newTokens, headers);
-            return request; // 새로운 토큰 설정 후 요청 전달
+            return request;
         } catch (error) {
-            return errorResponse();
+            return errorResponse("Failed to refresh token");
         }
+    } else if (tokenValidationResult !== true) {
+        return errorResponse(tokenValidationResult === "TokenUUIDMismatch" ? "Token UUID mismatch" : "Invalid token");
     }
 
-    return errorResponse(); // 토큰이 유효하지 않거나 재발급 실패 시
+    return request;
 };
 
-// AWS SDK를 통해 토큰 재발급
 async function refreshTokensWithAwsSdk(refreshToken) {
     const params = {
         AuthFlow: 'REFRESH_TOKEN_AUTH',
@@ -80,18 +92,32 @@ async function refreshTokensWithAwsSdk(refreshToken) {
     }
 }
 
-// 유틸리티 함수들
+function extractUuidFromPath(path) {
+    const match = path.match(/\/api\/jupyter-access\/([a-f0-9-]{36})-\d+/);
+    return match ? match[1] : null;
+}
+
 function extractTokenFromCookie(headers, tokenName) {
     const cookies = headers.cookie ? headers.cookie[0].value.split('; ') : [];
     const tokenCookie = cookies.find((cookie) => cookie.startsWith(`${tokenName}=`));
     return tokenCookie ? tokenCookie.split('=')[1] : null;
 }
 
-function isTokenValid(token) {
+async function isTokenValid(token, uuid) {
+    const decoded = jwt.decode(token, { complete: true });
+    const kid = decoded.header.kid;
+
+    const publicKey = pemCache[kid];
+    if (!publicKey) throw new Error('Public key not found');
+
     try {
-        const decoded = jwt.decode(token, { complete: true });
-        return decoded && decoded.payload && decoded.payload.exp * 1000 > Date.now();
+        const verifiedToken = jwt.verify(token, publicKey, { algorithms: ['RS256'] });
+        if (verifiedToken.sub !== uuid) return "TokenUUIDMismatch";
+        return true;
     } catch (error) {
+        if (error.name === 'TokenExpiredError') {
+            return "TokenExpired"
+        }
         return false;
     }
 }
@@ -104,10 +130,10 @@ function setTokensInCookies(tokens, headers) {
     headers['set-cookie'] = cookies;
 }
 
-function errorResponse() {
+function errorResponse(message) {
     return {
         status: '401',
         statusDescription: 'Forbidden',
-        body: 'Unauthorized'
+        body: message || 'Unauthorized',
     };
 }
