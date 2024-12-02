@@ -76,6 +76,10 @@ export const cognitoSignIn = async (args) => {
 
 export const cognitoSignUp = async (args) => {
   const { email, password, familyName, firstname, nickname } = args;
+  if (email.split('@').pop() !== 'kookmin.ac.kr')
+    return {
+      status: COGNITO_SIGN_UP_STATUS.NOT_AUTHORIZED_DOMAIN
+    };
   const params = {
     ClientId,
     Username: email,
