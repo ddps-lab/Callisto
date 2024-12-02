@@ -23,6 +23,10 @@ export default function Signup() {
       messageApi.error(
         'This account already exists. Please try signing up with a different account.'
       );
+    } else if (result.status === COGNITO_SIGN_UP_STATUS.NOT_AUTHORIZED_DOMAIN) {
+      messageApi.error(
+        'Please check the email domain. (Sign-up using this domain is not allowed.)'
+      );
     }
   };
   return (
