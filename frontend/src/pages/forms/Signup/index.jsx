@@ -25,7 +25,7 @@ export default function Signup() {
       );
     } else if (result.status === COGNITO_SIGN_UP_STATUS.NOT_AUTHORIZED_DOMAIN) {
       messageApi.error(
-        'Please check the email domain. (Only @kookmin.ac.kr domain is allowed.)'
+        'Please check the email domain. (Sign-up using this domain is not allowed.)'
       );
     }
   };
