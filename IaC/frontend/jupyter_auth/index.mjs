@@ -7,19 +7,18 @@ import jwkToPem from 'jwk-to-pem';
 let ssmClient;
 let cognitoClient;
 
-let REGION, USER_POOL_ID, CLIENT_ID, JWK_URL;
 let pemCache = {};
 let initialized = false;
+
+const REGION = "${region}"
+const USER_POOL_ID = "${user_pool_id}"
+const CLIENT_ID = "${client_id}"
+const JWK_URL = `https://cognito-idp.$${REGION}.amazonaws.com/$${USER_POOL_ID}/.well-known/jwks.json`
 
 async function initializeCognitoConfig() {
     if (!initialized) {
         ssmClient = new SSMClient({ region: "us-east-1" });
-        REGION = await getParameter('/callisto/cognito_region');
-        USER_POOL_ID = await getParameter('/callisto/cognito_user_pool_id');
-        CLIENT_ID = await getParameter('/callisto/cognito_client_id');
-
         cognitoClient = new CognitoIdentityProviderClient({ region: REGION });
-        JWK_URL = `https://cognito-idp.${REGION}.amazonaws.com/${USER_POOL_ID}/.well-known/jwks.json`;
 
         await cacheJwksAsPem();
 
@@ -99,7 +98,7 @@ function extractUuidFromPath(path) {
 
 function extractTokenFromCookie(headers, tokenName) {
     const cookies = headers.cookie ? headers.cookie[0].value.split('; ') : [];
-    const tokenCookie = cookies.find((cookie) => cookie.startsWith(`${tokenName}=`));
+    const tokenCookie = cookies.find((cookie) => cookie.startsWith(`$${tokenName}=`));
     return tokenCookie ? tokenCookie.split('=')[1] : null;
 }
 
@@ -124,8 +123,8 @@ async function isTokenValid(token, uuid) {
 
 function setTokensInCookies(tokens, headers) {
     const cookies = [
-        `idToken=${tokens.id_token}; Path=/; Secure; HttpOnly`,
-        `accessToken=${tokens.access_token}; Path=/; Secure; HttpOnly`
+        `idToken=$${tokens.id_token}; Path=/; Secure; HttpOnly`,
+        `accessToken=$${tokens.access_token}; Path=/; Secure; HttpOnly`
     ];
     headers['set-cookie'] = cookies;
 }

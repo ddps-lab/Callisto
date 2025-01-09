@@ -1,11 +1,22 @@
+resource "local_file" "jupyter_auth_lambda_index" {
+  filename = "${path.module}/jupyter_auth/index_var.mjs"
+  content = templatefile("${path.module}/jupyter_auth/index.mjs", {
+    region = var.region
+    user_pool_id = var.callisto_cognito_user_pool_id
+    client_id = var.callisto_cognito_user_pool_client_id
+  })
+
+}
 resource "null_resource" "compress_lambda_code" {
   provisioner "local-exec" {
     command = <<-EOT
             cd ${path.module}/jupyter_auth && \
             npm install jsonwebtoken && \
-            zip -r jupyter_auth_lambda.zip node_modules index.mjs
+            zip -r jupyter_auth_lambda.zip node_modules index_var.mjs
         EOT
   }
+
+  depends_on = [ local_file.jupyter_auth_lambda_index ]
 }
 
 resource "aws_iam_role" "jupyter_auth_lambda_role" {
@@ -60,7 +71,7 @@ resource "aws_iam_role_policy_attachment" "jupyter_auth_lambda_ssm_parameter_pol
 resource "aws_lambda_function" "jupyter_auth_lambda" {
   function_name = "callisto-jupyter-auth-lambda-${var.environment}-${var.random_string}"
   role          = aws_iam_role.jupyter_auth_lambda_role.arn
-  handler       = "index.handler"
+  handler       = "index_var.handler"
   runtime       = "nodejs20.x"
   filename      = "${path.module}/jupyter_auth/jupyter_auth_lambda.zip"
   publish       = true

@@ -81,7 +81,7 @@ resource "aws_cloudfront_origin_request_policy" "origin_request_policy" {
 }
 
 resource "aws_cloudfront_cache_policy" "cache_disabled_policy" {
-  name    = "caching-disabled"
+  name    = "caching-disabled-${var.random_string}"
   comment = "Cache policy for cache disable"
 
   default_ttl = 0
@@ -254,7 +254,7 @@ resource "aws_cloudfront_distribution" "distribution" {
 }
 
 resource "aws_cloudfront_response_headers_policy" "cors_policy" {
-  name = "AllowAllCORSHeadersPolicy"
+  name = "AllowAllCORSHeadersPolicy-${var.random_string}"
 
   cors_config {
     access_control_allow_credentials = false
