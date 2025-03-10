@@ -1,4 +1,14 @@
-import { Badge, Button, Drawer, Dropdown, Flex, Modal, Table } from 'antd';
+import {
+  Badge,
+  Button,
+  ConfigProvider,
+  Drawer,
+  Dropdown,
+  Flex,
+  Modal,
+  Table,
+  Tooltip
+} from 'antd';
 import { PlusOutlined, SyncOutlined } from '@ant-design/icons';
 import { useMessageApi, useUserStore } from '../../store/zustand.js';
 import { useEffect, useState } from 'react';
@@ -17,6 +27,13 @@ const BADGE_STATUS = {
   running: 'success',
   stopped: 'error',
   migrating: 'processing'
+};
+
+const TOOLTIP_MESSAGE = {
+  pending: 'Please wait while the Jupyter instance is being created.',
+  running: '',
+  stopped: 'Please start the Jupyter instance to access it.',
+  migrating: 'Please wait while the Jupyter instance is being migrated.'
 };
 
 const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
@@ -72,7 +89,6 @@ export default function Jupyter() {
       key: 'memory',
       ellipsis: true
     },
-
     {
       title: 'Disk (GB)',
       dataIndex: 'disk',
@@ -84,12 +100,31 @@ export default function Jupyter() {
       dataIndex: 'endpoint_url',
       key: 'endpoint_url',
       ellipsis: true,
-      render: (url) => (
-        <b>
-          <a href={`${url}`} target="_blank">
-            Open Link
-          </a>
-        </b>
+      render: (url, record) => (
+        <div>
+          <ConfigProvider
+            theme={{
+              components: {
+                Button: { paddingBlock: 0, paddingInline: 0 }
+              }
+            }}
+          >
+            <Tooltip
+              title={TOOLTIP_MESSAGE[record.status]}
+              placement="right"
+              arrow={true}
+            >
+              <Button
+                type="link"
+                href={url}
+                target="_blank"
+                disabled={record.status !== 'running'}
+              >
+                <b>Open Link</b>
+              </Button>
+            </Tooltip>
+          </ConfigProvider>
+        </div>
       )
     }
   ];
