@@ -7,7 +7,8 @@ import {
   Flex,
   Modal,
   Table,
-  Tooltip
+  Tooltip,
+  Empty
 } from 'antd';
 import { PlusOutlined, SyncOutlined } from '@ant-design/icons';
 import { useMessageApi, useUserStore } from '../../store/zustand.js';
@@ -274,6 +275,14 @@ export default function Jupyter() {
               setSelectedRowKeys(selectedRowKeys);
               setSelected(selectedRows.pop());
             }
+          }}
+          locale={{
+            emptyText: (
+              <Empty
+                description="No Jupyter instances found."
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+              />
+            )
           }}
           dataSource={data}
         />
