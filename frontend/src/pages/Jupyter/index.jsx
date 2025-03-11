@@ -8,7 +8,8 @@ import {
   Modal,
   Table,
   Tooltip,
-  Empty
+  Empty,
+  Checkbox
 } from 'antd';
 import { PlusOutlined, SyncOutlined } from '@ant-design/icons';
 import { useMessageApi, useUserStore } from '../../store/zustand.js';
@@ -37,6 +38,8 @@ const TOOLTIP_MESSAGE = {
   migrating: 'Please wait while the Jupyter instance is being migrated.'
 };
 
+const AUTO_REFRESH_INTERVAL = 15;
+
 const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
 
 export default function Jupyter() {
@@ -49,6 +52,10 @@ export default function Jupyter() {
   const [selected, setSelected] = useState(null);
   const [isUpdate, setIsUpdate] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [autoRefresh, setAutoRefresh] = useState(false);
+  const [refreshCountdown, setRefreshCountdown] = useState(
+    AUTO_REFRESH_INTERVAL
+  );
 
   const fetchData = async () => {
     setFetching(true);
@@ -149,6 +156,25 @@ export default function Jupyter() {
     } else fetchData();
   }, []);
 
+  useEffect(() => {
+    let interval;
+    if (autoRefresh) {
+      setRefreshCountdown(AUTO_REFRESH_INTERVAL);
+      interval = setInterval(() => {
+        setRefreshCountdown((prev) => {
+          if (prev === 1) {
+            fetchData();
+            return AUTO_REFRESH_INTERVAL;
+          }
+          return prev - 1;
+        });
+      }, AUTO_REFRESH_INTERVAL * 100);
+    } else {
+      setRefreshCountdown(AUTO_REFRESH_INTERVAL);
+    }
+    return () => clearInterval(interval);
+  }, [autoRefresh]);
+
   return (
     <>
       <Drawer
@@ -199,9 +225,18 @@ export default function Jupyter() {
           align={'center'}
         >
           <h2>Jupyter</h2>
-          <Flex gap={10}>
-            <Button onClick={fetchData}>
+          <Flex gap={10} align="center">
+            <Checkbox
+              checked={autoRefresh}
+              onChange={(e) => setAutoRefresh(e.target.checked)}
+            >
+              Auto Refresh
+            </Checkbox>
+            <Button onClick={fetchData} disabled={autoRefresh}>
               <SyncOutlined />
+              <div className="">
+                {autoRefresh ? <span>{refreshCountdown}s</span> : <></>}
+              </div>
             </Button>
             {/*<Input addonBefore={<SearchOutlined />} />*/}
             <Dropdown
