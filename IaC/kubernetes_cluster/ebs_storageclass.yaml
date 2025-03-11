@@ -6,5 +6,5 @@ provisioner: ebs.csi.aws.com
 volumeBindingMode: Immediate
 parameters:
   type: gp2
-  fsType: ext4
+  fsType: xfs
 allowVolumeExpansion: true

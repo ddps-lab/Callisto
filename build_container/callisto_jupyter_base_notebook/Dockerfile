@@ -1,32 +1,14 @@
-FROM jupyter/base-notebook:latest
-RUN pip3 install --no-cache-dir kubernetes
-
-# 클라이언트 확장 빌드 및 설치
-WORKDIR /opt/extension/frontend_idle_shutdown
-COPY frontend_idle_shutdown /opt/extension/frontend_idle_shutdown
-USER root
-RUN chown jovyan:users /opt/extension/frontend_idle_shutdown -R
-USER jovyan
-RUN pip install --no-cache-dir -e .
-
-# 클라이언트 확장 빌드
-RUN jlpm install && jlpm run build && jupyter labextension install /opt/extension/frontend_idle_shutdown && jlpm cache clean
-USER root
-RUN rm -rf /opt/extension/frontend_idle_shutdown
-USER jovyan
+FROM jupyter/base-notebook:lab-4.0.7
 
 # 서버 확장 설치
-COPY ./backend_idle_shutdown /opt/conda/lib/python3.11/site-packages/backend_idle_shutdown
 USER root
-RUN chown jovyan:users /opt/conda/lib/python3.11/site-packages/backend_idle_shutdown -R
-USER jovyan
-RUN pip install /opt/conda/lib/python3.11/site-packages/backend_idle_shutdown
+COPY ./backend_idle_shutdown /tmp/backend_idle_shutdown
+WORKDIR /tmp/backend_idle_shutdown
+RUN pip install .  # setup.py 기반 설치
 
 # 서버 확장 활성화
 RUN jupyter server extension enable --py backend_idle_shutdown
+WORKDIR /home/jovyan
+RUN rm -rf /tmp/backend_idle_shutdown
 
-# boto3 설치
-RUN pip install boto3 --no-cache-dir
-
-WORKDIR /home/jovyan/work
-
+USER jovyan

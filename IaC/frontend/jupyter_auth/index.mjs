@@ -8,36 +8,47 @@ let ssmClient;
 let cognitoClient;
 
 let pemCache = {};
-let initialized = false;
 
 const REGION = "${region}"
 const USER_POOL_ID = "${user_pool_id}"
 const CLIENT_ID = "${client_id}"
 const JWK_URL = `https://cognito-idp.$${REGION}.amazonaws.com/$${USER_POOL_ID}/.well-known/jwks.json`
 
+const HARDCODED_JWK = ${HARDCODED_JWK}
+
+HARDCODED_JWKS.forEach((jwk) => {
+    pemCache[jwk.kid] = jwkToPem(jwk);
+});
+
 async function initializeCognitoConfig() {
-    if (!initialized) {
-        ssmClient = new SSMClient({ region: "us-east-1" });
+    if (!cognitoClient) {
         cognitoClient = new CognitoIdentityProviderClient({ region: REGION });
 
         await cacheJwksAsPem();
-
-        initialized = true;
     }
 }
 
-async function getParameter(name) {
-    const command = new GetParameterCommand({ Name: name, WithDecryption: true });
-    const response = await ssmClient.send(command);
-    return response.Parameter.Value;
-}
+async function updateJwksIfNeeded() {
+    if (Date.now() - lastUpdated < CACHE_TTL) {
+        return; // 1시간 내에 업데이트된 경우 네트워크 요청 안함
+    }
 
-async function cacheJwksAsPem() {
-    const response = await axios.get(JWK_URL);
-    const jwks = response.data.keys;
-    jwks.forEach((jwk) => {
-        pemCache[jwk.kid] = jwkToPem(jwk);
-    });
+    try {
+        console.log("Fetching new JWKs from Cognito...");
+        const response = await axios.get(JWK_URL);
+        const jwks = response.data.keys;
+
+        // 기존 캐시 초기화 후 새로운 JWK 저장
+        pemCache = {};
+        jwks.forEach((jwk) => {
+            pemCache[jwk.kid] = jwkToPem(jwk);
+        });
+
+        lastUpdated = Date.now();
+        console.log("JWKs updated successfully.");
+    } catch (error) {
+        console.error("Failed to fetch JWKs:", error);
+    }
 }
 
 export const handler = async (event) => {
@@ -107,7 +118,16 @@ async function isTokenValid(token, uuid) {
     const kid = decoded.header.kid;
 
     const publicKey = pemCache[kid];
-    if (!publicKey) throw new Error('Public key not found');
+    if (!publicKey) {
+        console.log(`Unknown kid: ${kid}. Fetching new JWKs...`);
+
+        await updateJwksIfNeeded();
+        publicKey = pemCache[kid];
+
+        if (!publicKey) {
+            throw new Error('Public key not found');
+        }
+    }
 
     try {
         const verifiedToken = jwt.verify(token, publicKey, { algorithms: ['RS256'] });

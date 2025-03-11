@@ -1,9 +1,19 @@
+data "http" "cognito_jwks" {
+  url = "https://cognito-idp.${var.region}.amazonaws.com/${var.callisto_cognito_user_pool_id}/.well-known/jwks.json"
+}
+
+locals {
+  jwks_keys = jsondecode(data.http.cognito_jwks.body).keys
+  hardcoded_jwks = jsonencode(local.jwks_keys)
+}
+
 resource "local_file" "jupyter_auth_lambda_index" {
   filename = "${path.module}/jupyter_auth/index_var.mjs"
   content = templatefile("${path.module}/jupyter_auth/index.mjs", {
     region = var.region
     user_pool_id = var.callisto_cognito_user_pool_id
     client_id = var.callisto_cognito_user_pool_client_id
+    HARDCODED_JWK = local.hardcoded_jwks
   })
 
 }
