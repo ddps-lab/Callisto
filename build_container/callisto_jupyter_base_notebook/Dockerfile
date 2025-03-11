@@ -1,13 +1,4 @@
-FROM jupyter/base-notebook:latest
-RUN pip3 install --no-cache-dir kubernetes
-
-# 클라이언트 확장 빌드 및 설치
-WORKDIR /opt/extension/frontend_idle_shutdown
-COPY frontend_idle_shutdown /opt/extension/frontend_idle_shutdown
-USER root
-RUN chown jovyan:users /opt/extension/frontend_idle_shutdown -R
-USER jovyan
-RUN pip install --no-cache-dir -e .
+FROM jupyter/base-notebook:x86_64-python-3.11
 
 # 서버 확장 설치
 COPY ./backend_idle_shutdown /opt/conda/lib/python3.11/site-packages/backend_idle_shutdown
