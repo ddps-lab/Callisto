@@ -3,7 +3,7 @@ import os
 from kubernetes import client, config
 import boto3
 from jupyter_server.serverapp import ServerApp
-
+import signal
 
 REGION = os.getenv('REGION', "ap-northeast-2")
 
@@ -37,6 +37,13 @@ class ShutdownHook:
         self.namespace = os.getenv("NAMESPACE", "default")
         self.deployment_name = os.getenv("DEPLOYMENT_NAME", "deploymentname")
         self.created_at = int(os.getenv("CREATED_AT", "0"))
+        update_dynamodb_status_item(self.table_name, "sub", self.namespace, "created_at", self.created_at, "running")
+
+        self.shutdown_timeout = serverapp.shutdown_no_activity_timeout
+        self.received_sigterm = False
+
+        # SIGTERM = signal 15
+        signal.signal(signal.SIGTERM, self.handle_sigterm)
 
         # Kubernetes API 클라이언트 로드
         config.load_incluster_config()
@@ -57,15 +64,42 @@ class ShutdownHook:
             f"Scaled down deployment {self.deployment_name} in namespace {self.namespace} to 0 replicas."
         )
 
+    def handle_sigterm(self, signum, frame):
+        self.serverapp.log.info("Received SIGTERM signal. Assuming shutdown due to kubectl scale or pod termination.")
+        self.received_sigterm = True
+
+    def is_jupyter_auto_shutting_down(self):
+        kernel_list = self.serverapp.kernel_manager.list_kernels()
+        if not kernel_list:
+            self.serverapp.log.info("All kernels are idle: Possible idle shutdown.")
+            return True
+
+        all_idle = all(kernel["execution_state"] == "idle" for kernel in kernel_list)
+        if all_idle:
+            self.serverapp.log.info("All kernels are idle: Possible idle shutdown.")
+            return True
+
+        active_sessions = self.serverapp.session_manager.list_sessions()
+        if active_sessions:
+            self.serverapp.log.info("Active sessions exist: Not an idle shutdown.")
+            return False
+
+        return False
+
     def on_shutdown(self):
         """Jupyter 종료 시 실행되는 코드"""
-        self.serverapp.log.info("Jupyter is shutting down. Updating DynamoDB status & scaling down deployment.")
+        self.serverapp.log.info("Jupyter is shutting down. Checking reasons for shutdown.")
+
+        if self.received_sigterm:
+            self.serverapp.log.info("Shutdown triggered due to kubectl scale or pod termination. Hook will not execute.")
+            return
         
-        # DynamoDB 상태 업데이트
-        update_dynamodb_status_item(
-            self.table_name, "sub", self.namespace, "created_at", self.created_at, "stopped"
-        )
-
-        # Kubernetes Deployment Scale Down
-        self.scale_down_deployment()
-
+        if self.is_jupyter_auto_shutting_down():
+            self.serverapp.log.info("Jupyter is shutting down due to idle shutdown. Updating DynamoDB & Scaling down deployment.")
+            update_dynamodb_status_item(
+                self.table_name, "sub", self.namespace, "created_at", self.created_at, "stopped"
+            )
+            # Kubernetes Deployment Scale Down
+            self.scale_down_deployment()
+        else:
+            self.serverapp.log.info("Shutdown triggered due to manual shutdown. Hook will not execute.")

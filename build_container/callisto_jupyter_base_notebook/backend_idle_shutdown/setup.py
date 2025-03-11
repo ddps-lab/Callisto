@@ -7,7 +7,7 @@ setup(
     include_package_data=True,
     install_requires=['jupyter-server', 'boto3', 'kubernetes'],
     entry_points={
-        'jupyter_serverextension': [
+        'jupyter_serverproxy_servers': [
             "backend_idle_shutdown = backend_idle_shutdown:load_jupyter_server_extension",
         ],
     },

@@ -1,14 +1,14 @@
-FROM jupyter/base-notebook:x86_64-python-3.11
+FROM jupyter/base-notebook:lab-4.0.7
 
 # 서버 확장 설치
-COPY ./backend_idle_shutdown /opt/conda/lib/python3.11/site-packages/backend_idle_shutdown
 USER root
-RUN chown jovyan:users /opt/conda/lib/python3.11/site-packages/backend_idle_shutdown -R
-USER jovyan
-RUN pip install /opt/conda/lib/python3.11/site-packages/backend_idle_shutdown
+COPY ./backend_idle_shutdown /tmp/backend_idle_shutdown
+WORKDIR /tmp/backend_idle_shutdown
+RUN pip install .  # setup.py 기반 설치
 
 # 서버 확장 활성화
 RUN jupyter server extension enable --py backend_idle_shutdown
+WORKDIR /home/jovyan
+RUN rm -rf /tmp/backend_idle_shutdown
 
-# boto3 설치
-RUN pip install boto3 --no-cache-dir
+USER jovyan
