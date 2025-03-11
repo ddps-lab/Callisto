@@ -33,7 +33,7 @@ const BADGE_STATUS = {
 const TOOLTIP_MESSAGE = {
   pending: 'Please wait while the Jupyter instance is being created.',
   running: '',
-  stopped: 'Please start the Jupyter instance to access it.',
+  stopped: 'Please start the Jupyter instance to access.',
   migrating: 'Please wait while the Jupyter instance is being migrated.'
 };
 
