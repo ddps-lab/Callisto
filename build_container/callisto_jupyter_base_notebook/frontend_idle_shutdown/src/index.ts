@@ -1,7 +1,10 @@
-import { JupyterFrontEnd, JupyterFrontEndPlugin } from '@jupyterlab/application';
+import {
+  JupyterFrontEnd,
+  JupyterFrontEndPlugin
+} from '@jupyterlab/application';
+
 import { ServerConnection } from '@jupyterlab/services'
 
-// XSRF 토큰을 가져오는 함수
 function getXsrfToken(): string | undefined {
   const matches = document.cookie.match('\\b_xsrf=([^;]*)\\b');
   return matches ? matches[1] : undefined;
@@ -43,14 +46,16 @@ function setupActivityListeners(baseUrl: string) {
 }
 
 const plugin: JupyterFrontEndPlugin<void> = {
-  id: 'frontend_idle_shutdown',
+  id: 'frontend_idle_shutdown:plugin',
+  description: 'A JupyterLab extension.',
   autoStart: true,
   activate: (app: JupyterFrontEnd) => {
     const baseUrl = ServerConnection.makeSettings().baseUrl;
     // JupyterLab 활성화 시 초기 활동 신호 전송
     setupActivityListeners(baseUrl)
     updateLastActivity(baseUrl);
-  },
+    console.log('JupyterLab extension frontend_idle_shutdown is activated!');
+  }
 };
 
 export default plugin;

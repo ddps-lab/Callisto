@@ -7,13 +7,13 @@
     "jupyterlab",
     "jupyterlab-extension"
   ],
-  "homepage": "https://github.com/github_username/frontend_idle_shutdown",
+  "homepage": "https://github.com/ddps-lab/callisto",
   "bugs": {
-    "url": "https://github.com/github_username/frontend_idle_shutdown/issues"
+    "url": "https://github.com/ddps-lab/callisto/issues"
   },
   "license": "BSD-3-Clause",
   "author": {
-    "name": "mhsong",
+    "name": "Moohyun Song",
     "email": "mhsong@kookmin.ac.kr"
   },
   "files": [
@@ -25,7 +25,7 @@
   "style": "style/index.css",
   "repository": {
     "type": "git",
-    "url": "https://github.com/github_username/frontend_idle_shutdown.git"
+    "url": "https://github.com/ddps-lab/callisto.git"
   },
   "workspaces": [
     "ui-tests"

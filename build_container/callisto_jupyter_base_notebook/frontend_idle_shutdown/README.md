@@ -1,6 +1,6 @@
 # frontend_idle_shutdown
 
-[![Github Actions Status](https://github.com/github_username/frontend_idle_shutdown/workflows/Build/badge.svg)](https://github.com/github_username/frontend_idle_shutdown/actions/workflows/build.yml)
+[![Github Actions Status](https://github.com/ddps-lab/callisto/workflows/Build/badge.svg)](https://github.com/ddps-lab/callisto/actions/workflows/build.yml)
 A JupyterLab extension.
 
 ## Requirements
