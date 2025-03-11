@@ -27,6 +27,3 @@ RUN jupyter server extension enable --py backend_idle_shutdown
 
 # boto3 설치
 RUN pip install boto3 --no-cache-dir
-
-WORKDIR /home/jovyan/work
-
