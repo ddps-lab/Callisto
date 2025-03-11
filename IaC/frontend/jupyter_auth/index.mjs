@@ -117,7 +117,7 @@ async function isTokenValid(token, uuid) {
 
     const publicKey = pemCache[kid];
     if (!publicKey) {
-        console.log(`Unknown kid: ${kid}. Fetching new JWKs...`);
+        console.log(`Unknown kid: $${kid}. Fetching new JWKs...`);
 
         await updateJwksIfNeeded();
         publicKey = pemCache[kid];
