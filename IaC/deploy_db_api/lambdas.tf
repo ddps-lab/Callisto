@@ -57,6 +57,8 @@ resource "aws_lambda_function" "callisto_cognito_presignup_validator_lambda" {
   runtime       = "nodejs22.x"
   role          = aws_iam_role.callisto_cognito_presignup_validator_lambda_role.arn
   filename      = "${path.module}/lambda_codes/callisto-presignup-validator/callisto-presignup-validator.zip"
+
+  depends_on = [ null_resource.compress_lambda_code ]
 }
 
 resource "aws_lambda_permission" "callisto_cognito_presignup_validator_lambda_permission" {
