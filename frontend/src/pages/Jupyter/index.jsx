@@ -154,6 +154,7 @@ export default function Jupyter() {
         });
       } else location.href = '/';
     } else fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -173,6 +174,7 @@ export default function Jupyter() {
       setRefreshCountdown(AUTO_REFRESH_INTERVAL);
     }
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoRefresh]);
 
   return (
@@ -218,13 +220,13 @@ export default function Jupyter() {
           </Button>
         </Flex>
       </Drawer>
-      <Flex vertical style={{ padding: '20px' }}>
+      <Flex vertical>
         <Flex
           style={{ width: '100%', marginBottom: '20px' }}
           justify={'space-between'}
           align={'center'}
         >
-          <h2>Jupyter</h2>
+          <h2 className="text-4xl">Jupyter</h2>
           <Flex gap={10} align="center">
             <Checkbox
               checked={autoRefresh}
@@ -234,7 +236,7 @@ export default function Jupyter() {
             </Checkbox>
             <Button onClick={fetchData} disabled={autoRefresh}>
               <SyncOutlined />
-              <div className="">
+              <div className={autoRefresh ? '' : 'hidden'}>
                 {autoRefresh ? <span>{refreshCountdown}s</span> : <></>}
               </div>
             </Button>

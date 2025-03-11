@@ -2,7 +2,7 @@ import { Layout, Menu } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { DashboardOutlined, ExperimentOutlined } from '@ant-design/icons';
 
-export default function SideBar(props) {
+export default function SideBar() {
   const navigate = useNavigate();
 
   const items = [
