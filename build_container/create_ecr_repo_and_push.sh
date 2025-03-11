@@ -1,12 +1,12 @@
 #!/bin/bash
 
-ECR_URI="741926482963.dkr.ecr.ap-northeast-2.amazonaws.com"
-REGION="ap-northeast-2"
-# AWSCLI_PROFILE=$3
+ECR_URI=$1
+REGION=$2
+AWSCLI_PROFILE=$3
 
-# # Create ECR repository
-# aws ecr create-repository --repository-name callisto-jupyter-base-notebook --region $REGION
-# aws ecr create-repository --repository-name callisto-ddb-jupyter-api --region $REGION
+# Create ECR repository
+aws ecr create-repository --repository-name callisto-jupyter-base-notebook --region $REGION
+aws ecr create-repository --repository-name callisto-ddb-jupyter-api --region $REGION
 
 aws ecr get-login-password --region $REGION | sudo docker login --username AWS --password-stdin $ECR_URI
 
