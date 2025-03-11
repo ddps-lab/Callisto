@@ -89,6 +89,8 @@ spec:
           value: "{{ region }}"
         - name: PIP_USER
           value: "true"
+        - name: PATH
+          value: "${PATH}:/home/jovyan/.local/bin"
         resources:
             requests:
                 cpu: {{ cpu_core }}m
