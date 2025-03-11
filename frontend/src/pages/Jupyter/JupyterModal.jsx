@@ -16,7 +16,7 @@ export default function JupyterModal(props) {
 
   const MAX_CPU = 2;
   const MAX_MEMORY = 13;
-  const MAX_DISK = 30;
+  const MAX_DISK = 50;
 
   const handleResetAndClose = () => {
     setName('');
