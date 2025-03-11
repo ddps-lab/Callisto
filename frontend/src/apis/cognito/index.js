@@ -7,7 +7,8 @@ import {
   ResendConfirmationCodeCommand,
   SignUpCommand,
   UsernameExistsException,
-  UserNotConfirmedException
+  UserNotConfirmedException,
+  UserLambdaValidationException
 } from '@aws-sdk/client-cognito-identity-provider';
 import {
   COGNITO_CONFIRM_STATUS,
@@ -76,10 +77,7 @@ export const cognitoSignIn = async (args) => {
 
 export const cognitoSignUp = async (args) => {
   const { email, password, familyName, firstname, nickname } = args;
-  if (email.split('@').pop() !== 'kookmin.ac.kr')
-    return {
-      status: COGNITO_SIGN_UP_STATUS.NOT_AUTHORIZED_DOMAIN
-    };
+
   const params = {
     ClientId,
     Username: email,
@@ -111,11 +109,18 @@ export const cognitoSignUp = async (args) => {
       status: COGNITO_SIGN_UP_STATUS.SUCCESS
     };
   } catch (error) {
+    console.error(error);
+
     if (error instanceof UsernameExistsException)
       return {
         status: COGNITO_SIGN_UP_STATUS.USERNAME_EXISTS
       };
-    console.error(error);
+
+    if (error instanceof UserLambdaValidationException)
+      return {
+        status: COGNITO_SIGN_UP_STATUS.NOT_AUTHORIZED_DOMAIN
+      };
+
     return {
       status: COGNITO_SIGN_UP_STATUS.ERROR
     };
