@@ -42,46 +42,48 @@ export default function Login() {
     }
   };
   return (
-    <FormLayout onFinish={onFinish}>
-      <Form.Item
-        name="email"
-        rules={[
-          {
-            required: true,
-            message: 'Please input your email!'
-          },
-          {
-            type: 'email',
-            message: 'Please input a valid email!'
-          }
-        ]}
-      >
-        <Input prefix={<UserOutlined />} placeholder="Email" />
-      </Form.Item>
-      <Form.Item
-        name="password"
-        rules={[
-          {
-            required: true,
-            message: 'Please input your password!'
-          }
-        ]}
-      >
-        <Input.Password prefix={<LockOutlined />} placeholder="Password" />
-      </Form.Item>
-      <Form.Item name="remember" valuePropName="checked">
-        <Checkbox>Remember me</Checkbox>
-      </Form.Item>
-      <Form.Item>
-        <Button type="primary" htmlType="submit">
-          Login
-        </Button>
-      </Form.Item>
-      <Form.Item>
-        <a onClick={() => navigate('/sign-up', { replace: true })}>
-          Don&apos;t have an account? Sign-up
-        </a>
-      </Form.Item>
-    </FormLayout>
+    <>
+      <FormLayout onFinish={onFinish}>
+        <Form.Item
+          name="email"
+          rules={[
+            {
+              required: true,
+              message: 'Please input your email!'
+            },
+            {
+              type: 'email',
+              message: 'Please input a valid email!'
+            }
+          ]}
+        >
+          <Input prefix={<UserOutlined />} placeholder="Email" />
+        </Form.Item>
+        <Form.Item
+          name="password"
+          rules={[
+            {
+              required: true,
+              message: 'Please input your password!'
+            }
+          ]}
+        >
+          <Input.Password prefix={<LockOutlined />} placeholder="Password" />
+        </Form.Item>
+        <Form.Item name="remember" valuePropName="checked">
+          <Checkbox>Remember me</Checkbox>
+        </Form.Item>
+        <Form.Item>
+          <Button type="primary" htmlType="submit">
+            Login
+          </Button>
+        </Form.Item>
+        <Form.Item>
+          <a onClick={() => navigate('/sign-up', { replace: true })}>
+            Don&apos;t have an account? Sign-up
+          </a>
+        </Form.Item>
+      </FormLayout>
+    </>
   );
 }
