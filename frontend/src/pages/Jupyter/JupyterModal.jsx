@@ -1,4 +1,4 @@
-import { ErrorMessage, InputTitle, Title } from '../styles.jsx';
+/* eslint-disable react/prop-types */
 import { Button, Flex, Input, InputNumber, Modal } from 'antd';
 import { useEffect, useState } from 'react';
 import { createJupyter, updateJupyter } from '../../apis/db/index.js';
@@ -84,7 +84,11 @@ export default function JupyterModal(props) {
 
   return (
     <Modal
-      title={<Title>{isUpdate ? 'Modify' : 'Create'} Jupyter Notebook</Title>}
+      title={
+        <h1 className="text-2xl font-bold">
+          {isUpdate ? 'Modify' : 'Create'} Jupyter Notebook
+        </h1>
+      }
       open={isOpen}
       onCancel={handleResetAndClose}
       footer={[
@@ -102,7 +106,7 @@ export default function JupyterModal(props) {
       ]}
     >
       <Flex vertical style={{ marginBottom: '20px' }}>
-        <InputTitle>Jupyter name</InputTitle>
+        <h2 className="mt-5 mb-2 text-lg">Jupyter name</h2>
         <Input
           placeholder={'Name'}
           maxLength={30}
@@ -112,15 +116,16 @@ export default function JupyterModal(props) {
         />
         {name && !/^[a-zA-Z0-9-_]{1,30}$/.test(name) && (
           <>
-            <ErrorMessage>
+            <div className="text-rose-500">
               The Jupyter name can be up to 30 characters long.
-            </ErrorMessage>
-            <ErrorMessage>
+            </div>
+
+            <div className="text-rose-500">
               Only English and special characters (-, _) can be entered.
-            </ErrorMessage>
+            </div>
           </>
         )}
-        <InputTitle>CPU Core(s)</InputTitle>
+        <h2 className="mt-5 mb-2 text-lg">CPU Core(s)</h2>
         <InputNumber
           defaultValue={1}
           placeholder="Core(s)"
@@ -132,7 +137,7 @@ export default function JupyterModal(props) {
           onChange={(value) => setCpu(value || 1)}
           value={cpu}
         />
-        <InputTitle>Memory (GB)</InputTitle>
+        <h2 className="mt-5 mb-2 text-lg">Memory (GB)</h2>
         <InputNumber
           defaultValue={2}
           placeholder="Memory (GB)"
@@ -144,7 +149,7 @@ export default function JupyterModal(props) {
           onChange={(value) => setMemory(value || 2)}
           value={memory}
         />
-        <InputTitle>Disk (GB)</InputTitle>
+        <h2 className="mt-5 mb-2 text-lg">Disk (GB)</h2>
         <InputNumber
           defaultValue={20}
           placeholder="Disk (GB)"

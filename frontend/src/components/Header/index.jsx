@@ -1,87 +1,44 @@
 import { LogoutOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import { Button, Layout } from 'antd';
-import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { useUserStore } from '../../store/zustand.js';
-
-const Logo = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  color: #fff;
-  font-size: 24px;
-  font-weight: 900;
-  gap: 8px;
-  letter-spacing: -1px;
-  cursor: pointer;
-
-  > img {
-    -webkit-user-drag: none;
-    user-drag: none;
-  }
-`;
-
-const Menu = styled.div`
-  display: flex;
-  align-items: center;
-  margin-left: auto;
-  gap: 10px;
-`;
-
-const ButtonGroup = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  .outline-white {
-    > svg {
-      fill: #fff;
-    }
-  }
-`;
-
-const User = styled.div`
-  margin-left: 10px;
-  color: white;
-  font-size: 16px;
-  > .user-name {
-    font-weight: bold;
-  }
-`;
 
 export default function Header() {
   const navigate = useNavigate();
   const { userInfo, logout } = useUserStore();
+
   return (
-    <Layout.Header style={{ display: 'flex' }}>
-      <Logo
-        onClick={() => {
-          navigate('/overview');
-        }}
+    <Layout.Header className="flex items-center bg-gray-900 text-white px-6 py-3">
+      <div
+        className="flex items-center text-2xl font-bold cursor-pointer tracking-tight"
+        onClick={() => navigate('/overview')}
       >
         Callisto
-      </Logo>
-      <Menu>
-        <ButtonGroup>
+      </div>
+      <div className="flex items-center ml-auto gap-4">
+        <div className="flex items-center gap-4">
           <Button
-            size={'small'}
-            type={'text'}
-            icon={<QuestionCircleOutlined className={'outline-white'} />}
+            size="small"
+            type="text"
+            icon={<QuestionCircleOutlined />}
+            className="text-white"
           />
           <Button
-            size={'small'}
-            type={'text'}
-            icon={<LogoutOutlined className={'outline-white'} />}
+            size="small"
+            type="text"
+            icon={<LogoutOutlined />}
+            className="text-white"
             onClick={() => {
               logout();
               localStorage.clear();
               navigate('/');
             }}
           />
-        </ButtonGroup>
-        <User>
-          <span className={'user-name'}>{userInfo.nickname}</span>
-        </User>
-      </Menu>
+        </div>
+        <div className="ml-3 text-white text-lg">
+          <span className="font-bold">{userInfo.nickname}</span>
+        </div>
+      </div>
     </Layout.Header>
   );
 }

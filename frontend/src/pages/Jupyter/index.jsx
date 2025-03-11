@@ -1,4 +1,16 @@
-import { Badge, Button, Drawer, Dropdown, Flex, Modal, Table } from 'antd';
+import {
+  Badge,
+  Button,
+  ConfigProvider,
+  Drawer,
+  Dropdown,
+  Flex,
+  Modal,
+  Table,
+  Tooltip,
+  Empty,
+  Checkbox
+} from 'antd';
 import { PlusOutlined, SyncOutlined } from '@ant-design/icons';
 import { useMessageApi, useUserStore } from '../../store/zustand.js';
 import { useEffect, useState } from 'react';
@@ -19,6 +31,15 @@ const BADGE_STATUS = {
   migrating: 'processing'
 };
 
+const TOOLTIP_MESSAGE = {
+  pending: 'Please wait while the Jupyter instance is being created.',
+  running: '',
+  stopped: 'Please start the Jupyter instance to access.',
+  migrating: 'Please wait while the Jupyter instance is being migrated.'
+};
+
+const AUTO_REFRESH_INTERVAL = 15;
+
 const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
 
 export default function Jupyter() {
@@ -31,6 +52,10 @@ export default function Jupyter() {
   const [selected, setSelected] = useState(null);
   const [isUpdate, setIsUpdate] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [autoRefresh, setAutoRefresh] = useState(false);
+  const [refreshCountdown, setRefreshCountdown] = useState(
+    AUTO_REFRESH_INTERVAL
+  );
 
   const fetchData = async () => {
     setFetching(true);
@@ -72,7 +97,6 @@ export default function Jupyter() {
       key: 'memory',
       ellipsis: true
     },
-
     {
       title: 'Disk (GB)',
       dataIndex: 'disk',
@@ -84,12 +108,31 @@ export default function Jupyter() {
       dataIndex: 'endpoint_url',
       key: 'endpoint_url',
       ellipsis: true,
-      render: (url) => (
-        <b>
-          <a href={`${url}`} target="_blank">
-            Open Link
-          </a>
-        </b>
+      render: (url, record) => (
+        <div>
+          <ConfigProvider
+            theme={{
+              components: {
+                Button: { paddingBlock: 0, paddingInline: 0 }
+              }
+            }}
+          >
+            <Tooltip
+              title={TOOLTIP_MESSAGE[record.status]}
+              placement="right"
+              arrow={true}
+            >
+              <Button
+                type="link"
+                href={url}
+                target="_blank"
+                disabled={record.status !== 'running'}
+              >
+                <b>Open Link</b>
+              </Button>
+            </Tooltip>
+          </ConfigProvider>
+        </div>
       )
     }
   ];
@@ -111,7 +154,28 @@ export default function Jupyter() {
         });
       } else location.href = '/';
     } else fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    let interval;
+    if (autoRefresh) {
+      setRefreshCountdown(AUTO_REFRESH_INTERVAL);
+      interval = setInterval(() => {
+        setRefreshCountdown((prev) => {
+          if (prev === 1) {
+            fetchData();
+            return AUTO_REFRESH_INTERVAL;
+          }
+          return prev - 1;
+        });
+      }, AUTO_REFRESH_INTERVAL * 100);
+    } else {
+      setRefreshCountdown(AUTO_REFRESH_INTERVAL);
+    }
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoRefresh]);
 
   return (
     <>
@@ -156,16 +220,25 @@ export default function Jupyter() {
           </Button>
         </Flex>
       </Drawer>
-      <Flex vertical style={{ padding: '20px' }}>
+      <Flex vertical>
         <Flex
           style={{ width: '100%', marginBottom: '20px' }}
           justify={'space-between'}
           align={'center'}
         >
-          <h2>Jupyter</h2>
-          <Flex gap={10}>
-            <Button onClick={fetchData}>
+          <h2 className="text-4xl">Jupyter</h2>
+          <Flex gap={10} align="center">
+            <Checkbox
+              checked={autoRefresh}
+              onChange={(e) => setAutoRefresh(e.target.checked)}
+            >
+              Auto Refresh
+            </Checkbox>
+            <Button onClick={fetchData} disabled={autoRefresh}>
               <SyncOutlined />
+              <div className={autoRefresh ? '' : 'hidden'}>
+                {autoRefresh ? <span>{refreshCountdown}s</span> : <></>}
+              </div>
             </Button>
             {/*<Input addonBefore={<SearchOutlined />} />*/}
             <Dropdown
@@ -239,6 +312,14 @@ export default function Jupyter() {
               setSelectedRowKeys(selectedRowKeys);
               setSelected(selectedRows.pop());
             }
+          }}
+          locale={{
+            emptyText: (
+              <Empty
+                description="No Jupyter instances found."
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+              />
+            )
           }}
           dataSource={data}
         />

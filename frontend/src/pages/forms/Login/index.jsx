@@ -74,12 +74,12 @@ export default function Login() {
       </Form.Item>
       <Form.Item>
         <Button type="primary" htmlType="submit">
-          Submit
+          Login
         </Button>
       </Form.Item>
       <Form.Item>
         <a onClick={() => navigate('/sign-up', { replace: true })}>
-          Don't have an account? Sign-up
+          Don&apos;t have an account? Sign-up
         </a>
       </Form.Item>
     </FormLayout>

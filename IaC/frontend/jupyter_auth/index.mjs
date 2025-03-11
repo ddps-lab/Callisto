@@ -23,8 +23,6 @@ HARDCODED_JWKS.forEach((jwk) => {
 async function initializeCognitoConfig() {
     if (!cognitoClient) {
         cognitoClient = new CognitoIdentityProviderClient({ region: REGION });
-
-        await cacheJwksAsPem();
     }
 }
 
