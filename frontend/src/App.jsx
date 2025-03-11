@@ -1,6 +1,7 @@
 import './App.css';
 import Login from './pages/forms/Login/index.jsx';
 import { ConfigProvider, message } from 'antd';
+import { StyleProvider } from '@ant-design/cssinjs';
 import Signup from './pages/forms/Signup/index.jsx';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import Confirm from './pages/forms/Confirm/index.jsx';
@@ -33,20 +34,22 @@ function App() {
 
   return (
     <BrowserRouter>
-      <ConfigProvider theme={settings}>
-        {contextHolder}
-        <Routes>
-          <Route index element={<Login />} />
-          <Route path={'/sign-up'} element={<Signup />} />
-          <Route path={'/confirm'} element={<Confirm />} />
-          <Route element={<DefaultLayout />}>
-            <Route path={'/overview'} element={<Overview />} />
-            <Route path={'/jupyter'} element={<Jupyter />} />
-            <Route path={'/menu3'} element={<></>} />
-            <Route path={'/menu4'} element={<></>} />
-          </Route>
-        </Routes>
-      </ConfigProvider>
+      <StyleProvider layer>
+        <ConfigProvider theme={settings}>
+          {contextHolder}
+          <Routes>
+            <Route index element={<Login />} />
+            <Route path={'/sign-up'} element={<Signup />} />
+            <Route path={'/confirm'} element={<Confirm />} />
+            <Route element={<DefaultLayout />}>
+              <Route path={'/overview'} element={<Overview />} />
+              <Route path={'/jupyter'} element={<Jupyter />} />
+              <Route path={'/menu3'} element={<></>} />
+              <Route path={'/menu4'} element={<></>} />
+            </Route>
+          </Routes>
+        </ConfigProvider>
+      </StyleProvider>
     </BrowserRouter>
   );
 }
