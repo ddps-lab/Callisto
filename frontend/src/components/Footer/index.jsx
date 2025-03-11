@@ -4,7 +4,9 @@ export default function Footer() {
   return (
     <Layout.Footer className="flex items-center bg-neutral-200 text-white px-6 pt-8">
       <div className="w-full text-neutral-800 text-right">
-        <p className="m-0 px-2">© 2025 HYU DDPS LAB. All Rights Reserved.</p>
+        <p className="m-0 px-2">
+          © 2025 Hanyang University DDPS Lab. All Rights Reserved.
+        </p>
         <div className="bg-white p-2 px-4 mt-3 rounded-sm flex gap-2 justify-between">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -26,8 +28,8 @@ export default function Footer() {
             />
           </svg>
           <p className="m-0 flex-1 text-left">
-            An official web-service of the{' '}
-            <a href="https://ddps.cloud">HYU DDPS LAB</a>
+            An official web-service of the Hanyang University{' '}
+            <a href="https://ddps.cloud">DDPS Lab.</a>
           </p>
         </div>
       </div>
