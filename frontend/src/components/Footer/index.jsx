@@ -26,7 +26,8 @@ export default function Footer() {
             />
           </svg>
           <p className="m-0 flex-1 text-left">
-            An official web-service of the HYU DDPS LAB
+            An official web-service of the{' '}
+            <a href="https://ddps.cloud">HYU DDPS LAB</a>
           </p>
         </div>
       </div>
