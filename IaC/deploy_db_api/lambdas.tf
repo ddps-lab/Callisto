@@ -58,6 +58,12 @@ resource "aws_lambda_function" "callisto_cognito_presignup_validator_lambda" {
   role          = aws_iam_role.callisto_cognito_presignup_validator_lambda_role.arn
   filename      = "${path.module}/lambda_codes/callisto-presignup-validator/callisto-presignup-validator.zip"
 
+  environment {
+    variables = {
+      ALLOWED_DOMAINS = var.allowed_signup_domain
+    }
+  }
+
   depends_on = [ null_resource.compress_lambda_code ]
 }
 

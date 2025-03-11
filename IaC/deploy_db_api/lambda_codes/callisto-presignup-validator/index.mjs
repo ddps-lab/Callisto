@@ -3,12 +3,14 @@ export const handler = async (event, context, callback) => {
   event.response.autoConfirmUser = false;
 
   const email = event.request.userAttributes.email;
-  const emailDomain = email.split("@");
-  const allowedDomains = ["hanyang.ac.kr", "kookmin.ac.kr"];
+  const emailDomain = email.split("@")[1];
+  const allowedDomains = process.env.ALLOWED_DOMAINS
+    ? process.env.ALLOWED_DOMAINS.split(",").map((domain) => domain.trim())
+    : [];
 
-  if (!allowedDomains.includes(emailDomain[1])) {
+  if (!allowedDomains.includes(emailDomain)) {
     var error = new Error(
-      "Only users with HYU or KMU email addresses can register.1"
+      "Only users with approved email addresses can register."
     );
     callback(error, event);
   }

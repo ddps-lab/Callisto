@@ -43,3 +43,8 @@ variable "jupyter_api_image_tag" {
   type    = string
   default = "latest"
 }
+
+variable "allowed_signup_domain" {
+  type    = string
+  default = "hanyang.ac.kr,kookmin.ac.kr"
+}
