@@ -42,9 +42,13 @@ resource "aws_iam_role_policy_attachment" "callisto_cognito_presignup_validator_
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-resource "local_file" "callisto_cognito_presignup_validator_lambda_index" {
-  filename = "${path.module}/lambda_codes/callisto-presignup-validator/index.zip"
-  content = file("${path.module}/lambda_codes/callisto-presignup-validator/index.mjs")
+resource "null_resource" "compress_lambda_code" {
+  provisioner "local-exec" {
+    command = <<-EOT
+            cd ${path.module}/lambda_codes/callisto-presignup-validator && \
+            zip -r callisto-presignup-validator.zip index.mjs
+        EOT
+  }
 }
 
 resource "aws_lambda_function" "callisto_cognito_presignup_validator_lambda" {
@@ -52,7 +56,7 @@ resource "aws_lambda_function" "callisto_cognito_presignup_validator_lambda" {
   handler       = "index.handler"
   runtime       = "nodejs22.x"
   role          = aws_iam_role.callisto_cognito_presignup_validator_lambda_role.arn
-  filename      = "${path.module}/lambda_codes/callisto-presignup-validator/index.zip"
+  filename      = "${path.module}/lambda_codes/callisto-presignup-validator/callisto-presignup-validator.zip"
 }
 
 resource "aws_lambda_permission" "callisto_cognito_presignup_validator_lambda_permission" {
