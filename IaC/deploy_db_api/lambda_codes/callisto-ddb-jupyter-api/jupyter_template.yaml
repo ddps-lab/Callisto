@@ -71,7 +71,9 @@ spec:
       - image: {{ ecr_uri }}/callisto-jupyter-base-notebook:latest
         imagePullPolicy: Always
         name: app-{{ endpoint_uid }}
-        command: ["start-notebook.sh", "--NotebookApp.token=''", "--NotebookApp.password=''", "--NotebookApp.base_url=/api/jupyter-access/{{ endpoint_uid }}", "--NotebookApp.allow_remote_access=True", "--NotebookApp.allow_origin='*'", "--NotebookApp.trust_xheaders=True", "--NotebookApp.notebook_dir=/home/jovyan"]
+        command: ["/bin/sh", "-c"]
+        args:
+        - "export PATH=\"$PATH:/home/jovyan/.local/bin\" && exec start-notebook.sh --IdentityProvider.token='' --ServerApp.password='' --ServerApp.base_url=/api/jupyter-access/{{ endpoint_uid }} --ServerApp.allow_remote_access=True --ServerApp.allow_origin='*' --ServerApp.trust_xheaders=True --ServerApp.notebook_dir=/home/jovyan --ServerApp.tornado_settings='{\"websocket_ping_interval\":10,\"websocket_ping_timeout\":20}' --MappingKernelManager.cull_idle_timeout=900 --MappingKernelManager.cull_interval=10 --MappingKernelManager.cull_connected=True --ServerApp.shutdown_no_activity_timeout=900"
         ports:
         - containerPort: 8888
         env:
@@ -79,8 +81,6 @@ spec:
           value: "{{ user_namespace }}"
         - name: DEPLOYMENT_NAME
           value: "deployment-{{ endpoint_uid }}"
-        - name: INACTIVITY_TIME
-          value: "{{ inactivity_time }}"
         - name: CREATED_AT
           value: "{{ created_at }}"
         - name: TABLE_NAME
