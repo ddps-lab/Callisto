@@ -20,3 +20,56 @@ resource "aws_lambda_function" "callisto-ddb-jupyter-api" {
     }
   }
 }
+
+resource "aws_iam_role" "callisto_cognito_presignup_validator_lambda_role" {
+  name = "callisto-cognito-presignup-validator-lambda-role-${var.random_string}"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Principal = {
+          Service = ["lambda.amazonaws.com"]
+        },
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "callisto_cognito_presignup_validator_lambda_basic_policy" {
+  role       = aws_iam_role.callisto_cognito_presignup_validator_lambda_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+resource "null_resource" "compress_lambda_code" {
+  provisioner "local-exec" {
+    command = <<-EOT
+            cd ${path.module}/lambda_codes/callisto-presignup-validator && \
+            zip -r callisto-presignup-validator.zip index.mjs
+        EOT
+  }
+}
+
+resource "aws_lambda_function" "callisto_cognito_presignup_validator_lambda" {
+  function_name = "callisto-cognito-presignup-validator-lambda-${var.environment}-${var.random_string}"
+  handler       = "index.handler"
+  runtime       = "nodejs22.x"
+  role          = aws_iam_role.callisto_cognito_presignup_validator_lambda_role.arn
+  filename      = "${path.module}/lambda_codes/callisto-presignup-validator/callisto-presignup-validator.zip"
+
+  environment {
+    variables = {
+      ALLOWED_DOMAINS = var.allowed_signup_domain
+    }
+  }
+
+  depends_on = [ null_resource.compress_lambda_code ]
+}
+
+resource "aws_lambda_permission" "callisto_cognito_presignup_validator_lambda_permission" {
+  statement_id = "AllowExecutionFromCognito"
+  action = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.callisto_cognito_presignup_validator_lambda.function_name
+  principal = "cognito-idp.amazonaws.com"
+}

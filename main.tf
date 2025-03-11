@@ -30,6 +30,7 @@ module "deploy_db_api" {
   jupyter_ddb_table_name           = module.deploy_db_api.callisto-jupyter_table_name
   jupyter_api_container_repository = var.jupyter_api_container_repository
   jupyter_api_image_tag            = var.jupyter_api_image_tag
+  allowed_signup_domain            = var.allowed_signup_domain
 
   providers = {
     aws          = aws

@@ -40,6 +40,10 @@ resource "aws_cognito_user_pool" "callisto_user_pool" {
     email_message = "Your verification code is {####}."
     email_subject = "[Callisto] Verify your email address"
   }
+
+  lambda_config {
+    pre_sign_up = aws_lambda_function.callisto_cognito_presignup_validator_lambda.arn
+  }
 }
 
 resource "aws_cognito_user_pool_client" "callisto_user_pool_client" {
@@ -64,5 +68,3 @@ resource "aws_cognito_user_pool_domain" "callisto_user_pool_domain" {
   domain       = "callisto-user-pool-domain-${var.environment}-${lower(var.random_string)}"
   user_pool_id = aws_cognito_user_pool.callisto_user_pool.id
 }
-
-

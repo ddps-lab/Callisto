@@ -28,3 +28,4 @@ variable "jupyter_ddb_table_name" {}
 variable "route53_data" {}
 variable "oidc_provider" {}
 variable "oidc_provider_arn" {}
+variable "allowed_signup_domain" {}
