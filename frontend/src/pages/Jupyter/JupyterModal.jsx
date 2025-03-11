@@ -14,6 +14,10 @@ export default function JupyterModal(props) {
   const [disk, setDisk] = useState(20);
   const [loading, setLoading] = useState(false);
 
+  const MAX_CPU = 2;
+  const MAX_MEMORY = 13;
+  const MAX_DISK = 30;
+
   const handleResetAndClose = () => {
     setName('');
     setCpu(1);
@@ -28,6 +32,12 @@ export default function JupyterModal(props) {
       !/^[a-zA-Z0-9-_]{1,30}$/.test(name)
     )
       return messageApi.error('Please enter the correct values in all fields.');
+
+    if (cpu > MAX_CPU || memory > MAX_MEMORY || disk > MAX_DISK)
+      return messageApi.error(
+        `The maximum value for CPU core(s) is ${MAX_CPU}, Memory is ${MAX_MEMORY}GB, and Disk is ${MAX_DISK}GB.`
+      );
+
     setLoading(true);
     const jupyter = await createJupyter(idToken, {
       name,
@@ -53,6 +63,12 @@ export default function JupyterModal(props) {
       !/^[a-zA-Z0-9-_]{1,30}$/.test(name)
     )
       return messageApi.error('Please enter the correct values in all fields.');
+
+    if (cpu > MAX_CPU || memory > MAX_MEMORY || disk > MAX_DISK)
+      return messageApi.error(
+        `The maximum value for CPU core(s) is ${MAX_CPU}, Memory is ${MAX_MEMORY}GB, and Disk is ${MAX_DISK}GB.`
+      );
+
     setLoading(true);
     const jupyter = await updateJupyter(idToken, {
       uid: props.jupyter.key,
@@ -133,6 +149,7 @@ export default function JupyterModal(props) {
             width: '100%'
           }}
           min={1}
+          max={MAX_CPU}
           parser={(value) => value.replace(/[^0-9]/g, '')}
           onChange={(value) => setCpu(value || 1)}
           value={cpu}
@@ -145,6 +162,7 @@ export default function JupyterModal(props) {
             width: '100%'
           }}
           min={1}
+          max={MAX_MEMORY}
           parser={(value) => value.replace(/[^0-9]/g, '')}
           onChange={(value) => setMemory(value || 2)}
           value={memory}
@@ -157,6 +175,7 @@ export default function JupyterModal(props) {
             width: '100%'
           }}
           min={1}
+          max={MAX_DISK}
           parser={(value) => value.replace(/[^0-9]/g, '')}
           onChange={(value) => setDisk(value || 20)}
           value={disk}
