@@ -7,10 +7,7 @@ spec:
     consolidateAfter: 1m0s
     consolidationPolicy: WhenEmpty
   template:
-    metadata:
-      annotations:
-        karpenter.k8s.aws/ec2-tags: |
-          Name=callisto-jupyter-worker
+    metadata: {}
     spec:
       nodeClassRef:
         name: jupyter-nodeclass
@@ -39,6 +36,8 @@ spec:
   amiSelectorTerms:
     - id: ${ami_id}
   role: "${node_role_name}"
+  tags:
+    Name: callisto-jupyter-worker
   subnetSelectorTerms:
     - tags:
         karpenter.sh/discovery: "${eks_cluster_name}"
