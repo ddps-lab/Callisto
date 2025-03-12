@@ -1,9 +1,16 @@
 import { Layout, Menu } from 'antd';
 import { useNavigate } from 'react-router-dom';
-import { DashboardOutlined, ExperimentOutlined } from '@ant-design/icons';
+import {
+  DashboardOutlined,
+  ExperimentOutlined,
+  ControlOutlined
+} from '@ant-design/icons';
+import { useUserStore } from '../../store/zustand.js';
 
 export default function SideBar() {
   const navigate = useNavigate();
+  const { userInfo } = useUserStore();
+  console.log(userInfo.profile);
 
   const items = [
     {
@@ -15,7 +22,16 @@ export default function SideBar() {
       key: 'jupyter',
       icon: <ExperimentOutlined />,
       label: 'Jupyter'
-    }
+    },
+    ...(userInfo.profile === 'admin'
+      ? [
+          {
+            key: 'admin',
+            icon: <ControlOutlined />,
+            label: 'Admin'
+          }
+        ]
+      : [])
   ];
 
   const handleMenuClick = (e) => {

@@ -9,6 +9,7 @@ import { useEffect } from 'react';
 import { useMessageApi } from './store/zustand.js';
 import Overview from './pages/Overview/index.jsx';
 import Jupyter from './pages/Jupyter/index.jsx';
+import Admin from './pages/Admin/index.jsx';
 import DefaultLayout from './layout.jsx';
 
 const settings = {
@@ -44,7 +45,7 @@ function App() {
             <Route element={<DefaultLayout />}>
               <Route path={'/overview'} element={<Overview />} />
               <Route path={'/jupyter'} element={<Jupyter />} />
-              <Route path={'/menu3'} element={<></>} />
+              <Route path={'/admin'} element={<Admin />} />
               <Route path={'/menu4'} element={<></>} />
             </Route>
           </Routes>
