@@ -83,25 +83,29 @@ export default function Admin() {
       ellipsis: true,
       render: (item) => (
         <Badge status={BADGE_STATUS[item]} text={capitalize(item)} />
-      )
+      ),
+      width: 100
     },
     {
-      title: 'CPU (cores)',
+      title: 'CPU',
       dataIndex: 'cpu',
       key: 'cpu',
-      ellipsis: true
+      ellipsis: true,
+      width: 90
     },
     {
-      title: 'Memory (GB)',
+      title: 'Memory',
       dataIndex: 'memory',
       key: 'memory',
-      ellipsis: true
+      ellipsis: true,
+      width: 100
     },
     {
-      title: 'Disk (GB)',
+      title: 'Disk',
       dataIndex: 'disk',
       key: 'disk',
-      ellipsis: true
+      ellipsis: true,
+      width: 90
     },
     {
       title: 'User Nickname',
@@ -120,6 +124,14 @@ export default function Admin() {
       dataIndex: 'email',
       key: 'email',
       ellipsis: true
+    },
+    {
+      title: 'Created At',
+      dataIndex: 'created_at',
+      key: 'created_at',
+      render: (item) => <span>{new Date(item).toLocaleString()}</span>,
+      sorter: (a, b) => new Date(a.created_at) - new Date(b.created_at),
+      width: 190
     },
     {
       title: 'Access',
@@ -151,7 +163,8 @@ export default function Admin() {
             </Tooltip>
           </ConfigProvider>
         </div>
-      )
+      ),
+      width: 90
     }
   ];
 
