@@ -8,6 +8,13 @@ export const handler = async (event, context, callback) => {
     ? process.env.ALLOWED_DOMAINS.split(",").map((domain) => domain.trim())
     : [];
 
+  if (event.request.userAttributes.profile !== "user") {
+    var error = new Error(
+      "Only user can register."
+    );
+    callback(error, event);
+  }
+
   if (!allowedDomains.includes(emailDomain)) {
     var error = new Error(
       "Only users with approved email addresses can register."

@@ -11,6 +11,20 @@ const instance = (idToken) =>
     }
   });
 
+export const getAllAdminJupyters = async (idToken) => {
+  if (isNAToken(idToken)) {
+    location.href = '/';
+    return;
+  }
+  const response = await instance(idToken)
+    .get('/jupyter/admin')
+    .catch((e) => {
+      console.log(e);
+      return [];
+    });
+  return response?.data || [];
+};
+
 export const getJupyters = async (idToken) => {
   if (isNAToken(idToken)) {
     location.href = '/';

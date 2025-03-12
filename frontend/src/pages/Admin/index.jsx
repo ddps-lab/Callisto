@@ -17,7 +17,7 @@ import { useEffect, useState } from 'react';
 import JupyterModal from './JupyterModal.jsx';
 import {
   deleteJupyter,
-  getJupyters,
+  getAllAdminJupyters,
   updateJupyter
 } from '../../apis/db/index.js';
 import { isNAToken } from '../../utils/index.js';
@@ -57,11 +57,9 @@ export default function Admin() {
     AUTO_REFRESH_INTERVAL
   );
 
-  messageApi.success('The Jupyter instance has been successfully started.');
-
   const fetchData = async () => {
     setFetching(true);
-    const jupyters = await getJupyters(idToken);
+    const jupyters = await getAllAdminJupyters(idToken);
     setData(
       jupyters.map((jupyter) => ({
         ...jupyter,
@@ -103,6 +101,24 @@ export default function Admin() {
       title: 'Disk (GB)',
       dataIndex: 'disk',
       key: 'disk',
+      ellipsis: true
+    },
+    {
+      title: 'User Nickname',
+      dataIndex: 'nickname',
+      key: 'nickname',
+      ellipsis: true
+    },
+    {
+      title: 'User Name',
+      dataIndex: 'username',
+      key: 'username',
+      ellipsis: true
+    },
+    {
+      title: 'User Email',
+      dataIndex: 'email',
+      key: 'email',
       ellipsis: true
     },
     {

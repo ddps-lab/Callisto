@@ -129,7 +129,7 @@ async function isTokenValid(token, uuid) {
 
     try {
         const verifiedToken = jwt.verify(token, publicKey, { algorithms: ['RS256'] });
-        if (verifiedToken.sub !== uuid) return "TokenUUIDMismatch";
+        if (verifiedToken.sub !== uuid && verifiedToken.profile !== 'admin') return "TokenUUIDMismatch";
         return true;
     } catch (error) {
         if (error.name === 'TokenExpiredError') {
