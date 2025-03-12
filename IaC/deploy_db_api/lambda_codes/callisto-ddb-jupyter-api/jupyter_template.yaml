@@ -73,7 +73,23 @@ spec:
         name: app-{{ endpoint_uid }}
         command: ["/bin/sh", "-c"]
         args:
-        - "export PATH=\"$PATH:/home/jovyan/.local/bin\" && export PYTHONPATH=\"$PYTHONPATH:/home/jovyan/.local/lib/python3.11/site-packages\" && exec start-notebook.sh --IdentityProvider.token='' --ServerApp.password='' --ServerApp.base_url=/api/jupyter-access/{{ endpoint_uid }} --ServerApp.allow_remote_access=True --ServerApp.allow_origin='*' --ServerApp.trust_xheaders=True --ServerApp.notebook_dir=/home/jovyan --ServerApp.tornado_settings='{\"websocket_ping_interval\":10,\"websocket_ping_timeout\":20}' --MappingKernelManager.cull_idle_timeout=900 --MappingKernelManager.cull_interval=10 --MappingKernelManager.cull_connected=True --ServerApp.shutdown_no_activity_timeout=900"
+        - |
+          export PATH="/home/jovyan/.local/bin:$PATH"
+          mkdir -p ~/.ipython/profile_default/startup/
+          echo 'import site, sys; sys.path.append(site.getusersitepackages()); sys.path.append("/home/jovyan/.local/bin")' > ~/.ipython/profile_default/startup/00-add-usersite.py
+          PYTHONPATH=$PYTHONPATH exec start-notebook.sh \
+            --IdentityProvider.token='' \
+            --ServerApp.password='' \
+            --ServerApp.base_url="/api/jupyter-access/{{ endpoint_uid }}" \
+            --ServerApp.allow_remote_access=True \
+            --ServerApp.allow_origin='*' \
+            --ServerApp.trust_xheaders=True \
+            --ServerApp.notebook_dir="/home/jovyan" \
+            --ServerApp.tornado_settings='{"websocket_ping_interval":10,"websocket_ping_timeout":20}' \
+            --MappingKernelManager.cull_idle_timeout=900 \
+            --MappingKernelManager.cull_interval=10 \
+            --MappingKernelManager.cull_connected=True \
+            --ServerApp.shutdown_no_activity_timeout=900
         ports:
         - containerPort: 8888
         env:
