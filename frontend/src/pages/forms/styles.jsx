@@ -33,7 +33,7 @@ export const FormLayout = ({ children, onFinish }) => (
             </svg>
           </div>
 
-          <h1 className="font-bold text-slate-800 text-[40px] tracking-[.20em] uppercase">
+          <h1 className="font-thin text-slate-800 text-[40px] tracking-[.20em] uppercase">
             Callisto
           </h1>
         </div>

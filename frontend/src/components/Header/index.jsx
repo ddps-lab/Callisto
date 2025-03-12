@@ -10,7 +10,7 @@ export default function Header() {
   return (
     <Layout.Header className="flex items-center bg-slate-800 text-white px-6 py-3">
       <div
-        className="flex items-center text-2xl font-bold cursor-pointer tracking-[.20em] uppercase"
+        className="flex items-center text-2xl font-normal cursor-pointer tracking-[.20em] uppercase"
         onClick={() => navigate('/overview')}
       >
         Callisto
