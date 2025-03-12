@@ -66,6 +66,11 @@ resource "aws_iam_role_policy_attachment" "iam_full_access_policy" {
   policy_arn = "arn:aws:iam::aws:policy/IAMFullAccess"
 }
 
+resource "aws_iam_role_policy_attachment" "cognito_readonly_access_policy" {
+  role       = aws_iam_role.lambda_api_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonCognitoReadOnly"
+}
+
 resource "aws_eks_access_entry" "eks-access-entry" {
   cluster_name  = var.eks_cluster_name
   principal_arn = aws_iam_role.lambda_api_role.arn
