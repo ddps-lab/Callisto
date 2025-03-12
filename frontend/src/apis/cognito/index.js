@@ -83,22 +83,11 @@ export const cognitoSignUp = async (args) => {
     Username: email,
     Password: password,
     UserAttributes: [
-      {
-        Name: 'email',
-        Value: email
-      },
-      {
-        Name: 'family_name',
-        Value: familyName
-      },
-      {
-        Name: 'name',
-        Value: firstname
-      },
-      {
-        Name: 'nickname',
-        Value: nickname
-      }
+      { Name: 'email', Value: email },
+      { Name: 'family_name', Value: familyName },
+      { Name: 'name', Value: firstname },
+      { Name: 'nickname', Value: nickname },
+      { Name: 'profile', Value: 'user' }
     ]
   };
 

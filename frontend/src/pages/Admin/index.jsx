@@ -11,7 +11,7 @@ import {
   Empty,
   Checkbox
 } from 'antd';
-import { PlusOutlined, SyncOutlined } from '@ant-design/icons';
+import { SyncOutlined } from '@ant-design/icons';
 import { useMessageApi, useUserStore } from '../../store/zustand.js';
 import { useEffect, useState } from 'react';
 import JupyterModal from './JupyterModal.jsx';
@@ -56,6 +56,8 @@ export default function Admin() {
   const [refreshCountdown, setRefreshCountdown] = useState(
     AUTO_REFRESH_INTERVAL
   );
+
+  messageApi.success('The Jupyter instance has been successfully started.');
 
   const fetchData = async () => {
     setFetching(true);
@@ -176,7 +178,6 @@ export default function Admin() {
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoRefresh]);
-
   return (
     <>
       <Drawer
@@ -290,16 +291,6 @@ export default function Admin() {
             >
               <Button>Actions</Button>
             </Dropdown>
-            <Button
-              loading={fetching}
-              type={'primary'}
-              onClick={() => {
-                setIsModalOpen(true);
-              }}
-            >
-              <PlusOutlined />
-              Add New
-            </Button>
           </Flex>
         </Flex>
         <Table
