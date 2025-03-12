@@ -3,7 +3,7 @@ data "http" "cognito_jwks" {
 }
 
 locals {
-  jwks_keys = jsondecode(data.http.cognito_jwks.body).keys
+  jwks_keys = jsondecode(data.http.cognito_jwks.response_body).keys
   hardcoded_jwks = jsonencode(local.jwks_keys)
 }
 
