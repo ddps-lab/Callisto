@@ -8,9 +8,9 @@ export default function Header() {
   const { userInfo, logout } = useUserStore();
 
   return (
-    <Layout.Header className="flex items-center bg-gray-900 text-white px-6 py-3">
+    <Layout.Header className="flex items-center bg-slate-800 text-white px-6 py-3">
       <div
-        className="flex items-center text-2xl font-bold cursor-pointer tracking-tight"
+        className="flex items-center text-2xl font-normal cursor-pointer tracking-[.20em] uppercase"
         onClick={() => navigate('/overview')}
       >
         Callisto
