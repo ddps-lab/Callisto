@@ -15,7 +15,7 @@ variable "awscli_profile" {
 
 variable "k8s_cluster_version" {
   type    = string
-  default = "1.31"
+  default = "1.32"
 }
 
 variable "container_registry" {
@@ -28,10 +28,11 @@ variable "route53_domain" {
   default = "callisto.ddps.cloud"
 }
 
-# ap-northeast-2 AL2023 k8s 1.31 ami : ami-0ddebd0f578342110
+# ap-northeast-2 AL2023 k8s 1.32 ami : ami-00bda0fed08243983
+# ap-northeast-2 Bottlerocket k8s 1.32 ami : ami-08265ffabdfd9e267
 variable "ami_id" {
   type    = string
-  default = "ami-0ddebd0f578342110"
+  default = "ami-08265ffabdfd9e267"
 }
 
 variable "jupyter_api_container_repository" {

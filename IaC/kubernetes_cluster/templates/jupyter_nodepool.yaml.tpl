@@ -32,10 +32,12 @@ kind: EC2NodeClass
 metadata:
   name: jupyter-nodeclass
 spec:
-  amiFamily: AL2023
+  amiFamily: Bottlerocket
   amiSelectorTerms:
     - id: ${ami_id}
   role: "${node_role_name}"
+  tags:
+    Name: callisto-jupyter-worker
   subnetSelectorTerms:
     - tags:
         karpenter.sh/discovery: "${eks_cluster_name}"
