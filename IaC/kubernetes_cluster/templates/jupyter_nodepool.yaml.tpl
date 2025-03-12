@@ -7,7 +7,10 @@ spec:
     consolidateAfter: 1m0s
     consolidationPolicy: WhenEmpty
   template:
-    metadata: {}
+    metadata:
+      annotations:
+        karpenter.k8s.aws/ec2-tags: |
+          Name=callisto-jupyter-worker
     spec:
       nodeClassRef:
         name: jupyter-nodeclass
@@ -32,7 +35,7 @@ kind: EC2NodeClass
 metadata:
   name: jupyter-nodeclass
 spec:
-  amiFamily: AL2023
+  amiFamily: Bottlerocket
   amiSelectorTerms:
     - id: ${ami_id}
   role: "${node_role_name}"
