@@ -16,7 +16,7 @@ const JWK_URL = `https://cognito-idp.$${REGION}.amazonaws.com/$${USER_POOL_ID}/.
 
 const HARDCODED_JWK = ${HARDCODED_JWK}
 
-HARDCODED_JWKS.forEach((jwk) => {
+HARDCODED_JWK.forEach((jwk) => {
     pemCache[jwk.kid] = jwkToPem(jwk);
 });
 
