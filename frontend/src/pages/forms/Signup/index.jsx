@@ -122,14 +122,17 @@ export default function Signup() {
             }
           })
         ]}
-        style={{
-          marginBottom: '30px'
-        }}
       >
         <Input.Password
           prefix={<LockOutlined />}
           placeholder="Confirm Password"
         />
+      </Form.Item>
+      <Form.Item className="mb-3">
+        <span className="text-xs">
+          By signing up, you agree to our{' '}
+          <a href="https://ddps.cloud">Privacy Policy</a>.
+        </span>
       </Form.Item>
       <Form.Item>
         <Button

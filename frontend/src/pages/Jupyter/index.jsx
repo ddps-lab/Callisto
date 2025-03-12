@@ -83,25 +83,37 @@ export default function Jupyter() {
       ellipsis: true,
       render: (item) => (
         <Badge status={BADGE_STATUS[item]} text={capitalize(item)} />
-      )
+      ),
+      width: 200
     },
     {
       title: 'CPU (cores)',
       dataIndex: 'cpu',
       key: 'cpu',
-      ellipsis: true
+      ellipsis: true,
+      width: 120
     },
     {
       title: 'Memory (GB)',
       dataIndex: 'memory',
       key: 'memory',
-      ellipsis: true
+      ellipsis: true,
+      width: 120
     },
     {
       title: 'Disk (GB)',
       dataIndex: 'disk',
       key: 'disk',
-      ellipsis: true
+      ellipsis: true,
+      width: 120
+    },
+    {
+      title: 'Created At',
+      dataIndex: 'created_at',
+      key: 'created_at',
+      render: (item) => <span>{new Date(item).toLocaleString()}</span>,
+      sorter: (a, b) => new Date(a.created_at) - new Date(b.created_at),
+      width: 190
     },
     {
       title: 'Access',
@@ -133,7 +145,8 @@ export default function Jupyter() {
             </Tooltip>
           </ConfigProvider>
         </div>
-      )
+      ),
+      width: 120
     }
   ];
 
