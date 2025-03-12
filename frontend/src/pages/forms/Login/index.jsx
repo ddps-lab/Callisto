@@ -1,5 +1,5 @@
 import { LockOutlined, UserOutlined } from '@ant-design/icons';
-import { Button, Checkbox, Form, Input } from 'antd';
+import { Button, Checkbox, ConfigProvider, Form, Input } from 'antd';
 import { FormLayout } from '../styles.jsx';
 import { useNavigate } from 'react-router-dom';
 import { cognitoSignIn } from '../../../apis/cognito/index.js';
@@ -42,7 +42,7 @@ export default function Login() {
     }
   };
   return (
-    <>
+    <ConfigProvider componentSize="large">
       <FormLayout onFinish={onFinish}>
         <Form.Item
           name="email"
@@ -74,7 +74,7 @@ export default function Login() {
           <Checkbox>Remember me</Checkbox>
         </Form.Item>
         <Form.Item>
-          <Button type="primary" htmlType="submit">
+          <Button type="primary" htmlType="submit" className="w-full">
             Login
           </Button>
         </Form.Item>
@@ -84,6 +84,6 @@ export default function Login() {
           </a>
         </Form.Item>
       </FormLayout>
-    </>
+    </ConfigProvider>
   );
 }

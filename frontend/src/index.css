@@ -25,6 +25,6 @@
 body {
   margin: 0;
   place-items: center;
-  min-width: 1050px;
+  min-width: 900px;
   min-height: 100vh;
 }

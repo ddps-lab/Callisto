@@ -35,7 +35,7 @@ function App() {
   return (
     <BrowserRouter>
       <StyleProvider layer>
-        <ConfigProvider theme={settings}>
+        <ConfigProvider theme={settings} componentSize="middle">
           {contextHolder}
           <Routes>
             <Route index element={<Login />} />
