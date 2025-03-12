@@ -13,6 +13,7 @@ import tempfile
 from iam_util import *
 
 sts_client = boto3.client('sts')
+cognito_client = boto3.client('cognito-idp')
 response = sts_client.get_caller_identity()
 
 ACCOUNT_ID = response['Account']
@@ -215,8 +216,54 @@ def read_all(auth_sub):
             })
         }
 
+ATTRIBUTES_TO_INCLUDE = {"email", "family_name", "name", "nickname"}
 
-def update(auth_sub, uid, payload):
+def get_cognito_user_attributes(sub, user_pool_id):
+    try:
+        response = cognito_client.admin_get_user(
+            UserPoolId=user_pool_id,
+            Username=sub
+        )
+        attributes = {attr["Name"]: attr["Value"] for attr in response["UserAttributes"] if attr["Name"] in ATTRIBUTES_TO_INCLUDE}
+        return attributes if attributes else None
+    except Exception as e:
+        print(f"Error fetching user {sub}: {e}")
+        return None
+
+def read_all_admin(profile, user_pool_id):
+    if profile != "admin":
+        return {
+            "statusCode": 403,
+            "body": json.dumps({
+                "message": "Forbidden"
+            })
+        }
+    try:
+        response = TABLE.scan()
+
+        for item in response["Items"]:
+            user_attributes = get_cognito_user_attributes(item["sub"], user_pool_id)
+            if user_attributes:
+                item["username"] = f"{user_attributes['name']} {user_attributes['family_name']}"
+                item["email"] = user_attributes["email"]
+                item["nickname"] = user_attributes["nickname"]
+
+        return {
+            "statusCode": 200,
+            "body": json.dumps(response["Items"], default=lambda o: int(o) if isinstance(o, Decimal) and o % 1 == 0 else float(o))
+        }
+    except Exception as e:
+        print(e)
+        return {
+            "statusCode": 500,
+            "body": json.dumps({
+                "message": "Internal server error",
+                "error": str(e)
+            })
+        }
+
+
+def update(auth_sub, uid, payload, profile):
     changeable_keys = ["name", "cpu", "memory", "disk", "status"]
     sub, created_at = uid.split("@", 1) if "@" in uid else (uid, None)
     if not sub or not created_at:
@@ -226,13 +273,14 @@ def update(auth_sub, uid, payload):
                 "message": "Missing uid"
             })
         }
-    if sub != auth_sub:
+    if sub != auth_sub and profile != "admin":
         return {
             "statusCode": 403,
             "body": json.dumps({
                 "message": "Forbidden"
             })
         }
+
     try:
         if "status" in payload:
             if payload["status"] == "start":
@@ -309,7 +357,7 @@ def update(auth_sub, uid, payload):
         }
 
 
-def delete(auth_sub, uid):
+def delete(auth_sub, uid, profile):
     sub, created_at = uid.split("@", 1) if "@" in uid else (uid, None)
     if not sub or not created_at:
         return {
@@ -318,7 +366,7 @@ def delete(auth_sub, uid):
                 "message": "Missing uid"
             })
         }
-    if sub != auth_sub:
+    if sub != auth_sub and profile != "admin":
         return {
             "statusCode": 403,
             "body": json.dumps({
@@ -405,13 +453,16 @@ def lambda_handler(event, context):
                 res.update(
                     read(auth_sub, event["pathParameters"].get("uid")))  # uid
             else:
-                res.update(read_all(auth_sub))
+                if event.get("resource") == "/api/jupyter/admin":
+                    res.update(read_all_admin(event["requestContext"]["authorizer"]["claims"]["profile"], event["requestContext"]["authorizer"]["claims"]["iss"].split("/")[3]))
+                else:
+                    res.update(read_all(auth_sub))
         elif method == "PATCH":
             res.update(
-                update(auth_sub, event["pathParameters"].get("uid"), req_body))
+                update(auth_sub, event["pathParameters"].get("uid"), req_body, event["requestContext"]["authorizer"]["claims"]["profile"]))
         elif method == "DELETE":
             res.update(
-                delete(auth_sub, event["pathParameters"].get("uid")))  # uid
+                delete(auth_sub, event["pathParameters"].get("uid"), event["requestContext"]["authorizer"]["claims"]["profile"]))
         else:
             res.update({
                 "statusCode": 405,
