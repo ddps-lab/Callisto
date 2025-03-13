@@ -262,6 +262,62 @@ def read_all_admin(profile, user_pool_id):
             })
         }
 
+def patch_deployment_resources(namespace, created_at, cpu=None, memory=None, disk=None):
+    # 기존 Deployment 가져오기
+    deployment = apps_v1.read_namespaced_deployment(name=f"deployment-{namespace}-{created_at}", namespace=namespace)
+
+    # 현재 리소스 가져오기
+    containers = deployment.spec.template.spec.containers
+    if not containers:
+        raise ValueError("Deployment does not have any containers defined.")
+
+    container = containers[0]  # 첫 번째 컨테이너를 대상으로 변경
+
+    # 변경할 리소스 설정
+    new_resources = container.resources.to_dict()
+
+    if cpu:
+        new_resources["limits"]["cpu"] = f"{cpu}m"
+        new_resources["requests"]["cpu"] = f"{cpu}m"
+    if memory:
+        new_resources["limits"]["memory"] = f"{memory}Mi"
+        new_resources["requests"]["memory"] = f"{memory}Mi"
+    if disk:
+        pvc = v1.read_namespaced_persistent_volume_claim(name=f"{namespace}-{created_at}-pvc", namespace=namespace)
+
+        current_size = pvc.spec.resources.requests["storage"]
+        current_size_value = int(current_size.strip("Gi"))
+
+        if disk < current_size_value:
+            raise ValueError("Disk size cannot be decreased.")
+        
+        patch_body = {
+            "spec": {
+                "resources": {
+                    "requests": {"storage": f"{disk}Gi"}
+                }
+            }
+        }
+
+        v1.patch_namespaced_persistent_volume_claim(
+            name=f"{namespace}-{created_at}-pvc",
+            namespace=namespace,
+            body=patch_body
+        )
+
+    # 새로운 리소스 적용
+    container.resources = client.V1ResourceRequirements(
+        limits=new_resources["limits"],
+        requests=new_resources["requests"]
+    )
+
+    # Deployment 업데이트
+    apps_v1.patch_namespaced_deployment(
+        name=f"deployment-{namespace}-{created_at}",
+        namespace=namespace,
+        body={"spec": {"template": {"spec": {"containers": [container]}}}}
+    )
+    print(f"Deployment {f"deployment-{namespace}-{created_at}"} updated with new resources.")
 
 def update(auth_sub, uid, payload, profile):
     changeable_keys = ["name", "cpu", "memory", "disk", "status"]
@@ -288,31 +344,7 @@ def update(auth_sub, uid, payload, profile):
                     name=f"deployment-{sub}-{created_at}", namespace=sub, body={"spec": {"replicas": 1}})
                 payload["status"] = "pending"
         elif "cpu" in payload and "memory" in payload and "disk" in payload:
-            variables = {
-                'user_namespace': sub,
-                'endpoint_uid': f"{sub}-{created_at}",
-                'cpu_core': int(payload["cpu"]) * 1000,
-                'memory': int(payload["memory"]) * 1024,
-                'storage': payload["disk"],
-                'ecr_uri': ECR_URI,
-                'inactivity_time': 15,
-                'iam_role_arn': f"arn:aws:iam::{ACCOUNT_ID}:role/callisto-{sub}-{created_at}-role",
-                "table_name": TABLE_NAME,
-                "created_at": created_at,
-                "region": REGION
-            }
-            rendered_yaml = render_template("jupyter_template.yaml", **variables)
-            with tempfile.NamedTemporaryFile(delete=True, mode='w') as temp_yaml_file:
-                temp_yaml_file.write(rendered_yaml)
-                temp_yaml_file.flush()
-            try:
-                utils.create_from_yaml(api_client, temp_yaml_file.name, namespace=sub)
-            except FailToCreateError as e:
-                for cause in e.api_exceptions:
-                    if isinstance(cause, ApiException) and cause.status == 409:
-                        print("Namespace resource already exists: ", cause)
-                    else:
-                        raise e
+            patch_deployment_resources(sub, created_at, payload["cpu"] * 1000, payload["memory"] * 1024, payload["disk"])
     except Exception as e:
         print(e)
         return {
