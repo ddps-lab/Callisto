@@ -302,17 +302,19 @@ def update(auth_sub, uid, payload, profile):
                 "region": REGION
             }
             rendered_yaml = render_template("jupyter_template.yaml", **variables)
-            with tempfile.NamedTemporaryFile(delete=True, mode='w') as temp_yaml_file:
+            with tempfile.NamedTemporaryFile(delete=False, mode='w') as temp_yaml_file:
                 temp_yaml_file.write(rendered_yaml)
                 temp_yaml_file.flush()
+                temp_yaml_path = temp_yaml_file.name
             try:
-                utils.create_from_yaml(api_client, temp_yaml_file.name, namespace=sub)
+                utils.create_from_yaml(api_client, temp_yaml_path, namespace=sub)
             except FailToCreateError as e:
                 for cause in e.api_exceptions:
                     if isinstance(cause, ApiException) and cause.status == 409:
                         print("Namespace resource already exists: ", cause)
                     else:
                         raise e
+            os.remove(temp_yaml_path)
     except Exception as e:
         print(e)
         return {
