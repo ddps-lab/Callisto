@@ -264,7 +264,8 @@ export default function Jupyter() {
                     onClick: () => {
                       setIsUpdate(true);
                       setIsModalOpen(true);
-                    }
+                    },
+                    disabled: true
                   },
                   {
                     label: 'Start',

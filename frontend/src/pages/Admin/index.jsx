@@ -281,7 +281,8 @@ export default function Admin() {
                     onClick: () => {
                       setIsUpdate(true);
                       setIsModalOpen(true);
-                    }
+                    },
+                    disabled: true
                   },
                   {
                     label: 'Start',
