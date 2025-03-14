@@ -82,11 +82,11 @@ export default function Signup() {
         rules={[
           {
             required: true,
-            message: 'Please input nickname!'
+            message: 'Please input Student ID!'
           }
         ]}
       >
-        <Input prefix={<SmileOutlined />} placeholder="Nickname" />
+        <Input prefix={<SmileOutlined />} placeholder="Student ID" />
       </Form.Item>
       <Form.Item
         name="password"
