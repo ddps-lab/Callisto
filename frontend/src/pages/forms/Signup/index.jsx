@@ -1,6 +1,6 @@
 import { FormLayout } from '../styles.jsx';
 import { Button, Form, Input, Space } from 'antd';
-import { LockOutlined, SmileOutlined, UserOutlined } from '@ant-design/icons';
+import { LockOutlined, IdcardOutlined, UserOutlined } from '@ant-design/icons';
 import {
   COGNITO_SIGN_UP_STATUS,
   PASSWORD_REGEX
@@ -82,11 +82,11 @@ export default function Signup() {
         rules={[
           {
             required: true,
-            message: 'Please input Student ID!'
+            message: 'Please input Student ID Number!'
           }
         ]}
       >
-        <Input prefix={<SmileOutlined />} placeholder="Student ID" />
+        <Input prefix={<IdcardOutlined />} placeholder="Student Number" />
       </Form.Item>
       <Form.Item
         name="password"
