@@ -92,7 +92,7 @@ resource "helm_release" "nginx-ingress-controller" {
   name             = "ingress-nginx"
   repository       = "https://kubernetes.github.io/ingress-nginx"
   chart            = "ingress-nginx"
-  version          = "4.11.2"
+  version          = "4.12.1"
   wait             = true
 
   set {
