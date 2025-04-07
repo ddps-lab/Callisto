@@ -38,7 +38,6 @@ export const cognitoSignIn = async (args) => {
     const result = await cognitoClient.send(command);
     const { AuthenticationResult, ChallengeName, Session } = result;
     if (AuthenticationResult) {
-      localStorage.setItem('refreshToken', AuthenticationResult.RefreshToken);
       return {
         status: COGNITO_SIGN_IN_STATUS.SUCCESS,
         idToken: AuthenticationResult.IdToken || '',

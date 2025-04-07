@@ -10,7 +10,6 @@ import { useUserStore } from '../../store/zustand.js';
 export default function SideBar() {
   const navigate = useNavigate();
   const { userInfo } = useUserStore();
-  console.log(userInfo.profile);
 
   const items = [
     {

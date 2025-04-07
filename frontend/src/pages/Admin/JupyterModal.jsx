@@ -5,7 +5,7 @@ import { createJupyter, updateJupyter } from '../../apis/db/index.js';
 import { useMessageApi } from '../../store/zustand.js';
 
 export default function JupyterModal(props) {
-  const { isOpen, onClose, isUpdate, idToken } = props;
+  const { isOpen, onClose, isUpdate } = props;
   const { messageApi } = useMessageApi();
 
   const [name, setName] = useState('');
@@ -39,7 +39,7 @@ export default function JupyterModal(props) {
       );
 
     setLoading(true);
-    const jupyter = await createJupyter(idToken, {
+    const jupyter = await createJupyter({
       name,
       cpu,
       memory,
@@ -70,7 +70,7 @@ export default function JupyterModal(props) {
       );
 
     setLoading(true);
-    const jupyter = await updateJupyter(idToken, {
+    const jupyter = await updateJupyter({
       uid: props.jupyter.key,
       name,
       cpu,

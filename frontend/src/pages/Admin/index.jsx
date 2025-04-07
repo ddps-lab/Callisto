@@ -12,7 +12,7 @@ import {
   Checkbox
 } from 'antd';
 import { SyncOutlined } from '@ant-design/icons';
-import { useMessageApi, useUserStore } from '../../store/zustand.js';
+import { useMessageApi } from '../../store/zustand.js';
 import { useEffect, useState } from 'react';
 import JupyterModal from './JupyterModal.jsx';
 import {
@@ -20,9 +20,6 @@ import {
   getAllAdminJupyters,
   updateJupyter
 } from '../../apis/db/index.js';
-import { isNAToken } from '../../utils/index.js';
-import { cognitoRefreshAuth } from '../../apis/cognito/index.js';
-import { COGNITO_SIGN_IN_STATUS } from '../../store/constant.js';
 
 const BADGE_STATUS = {
   pending: 'default',
@@ -44,7 +41,6 @@ const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
 
 export default function Admin() {
   const { messageApi } = useMessageApi();
-  const { idToken, setAccessToken, setIdToken } = useUserStore();
   const [data, setData] = useState([]);
   const [fetching, setFetching] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -59,7 +55,7 @@ export default function Admin() {
 
   const fetchData = async () => {
     setFetching(true);
-    const jupyters = await getAllAdminJupyters(idToken);
+    const jupyters = await getAllAdminJupyters();
     setData(
       jupyters.map((jupyter) => ({
         ...jupyter,
@@ -168,24 +164,8 @@ export default function Admin() {
     }
   ];
 
-  const refresh = async (refreshToken) => {
-    const res = await cognitoRefreshAuth(refreshToken);
-    if (res?.status === COGNITO_SIGN_IN_STATUS.SUCCESS) {
-      setAccessToken(res.accessToken);
-      setIdToken(res.idToken);
-    }
-  };
-
   useEffect(() => {
-    if (isNAToken(idToken)) {
-      const refreshToken = localStorage.getItem('refreshToken');
-      if (refreshToken) {
-        refresh(refreshToken).then(() => {
-          fetchData();
-        });
-      } else location.href = '/';
-    } else fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    fetchData();
   }, []);
 
   useEffect(() => {
@@ -229,7 +209,7 @@ export default function Admin() {
             danger
             onClick={async () => {
               setFetching(true);
-              const jupyter = await deleteJupyter(idToken, selected.key);
+              const jupyter = await deleteJupyter(selected.key);
               if (jupyter) {
                 messageApi.success(
                   'The Jupyter instance has been successfully deleted.'
@@ -289,7 +269,7 @@ export default function Admin() {
                     key: 'start',
                     onClick: async () => {
                       setFetching(true);
-                      const jupyter = await updateJupyter(idToken, {
+                      const jupyter = await updateJupyter({
                         uid: selected.key,
                         status: 'start'
                       });
@@ -349,7 +329,6 @@ export default function Admin() {
         isUpdate={isUpdate}
         jupyter={isUpdate ? selected : null}
         isOpen={isModalOpen}
-        idToken={idToken}
         onClose={() => {
           setIsModalOpen(false);
           setIsUpdate(false);
