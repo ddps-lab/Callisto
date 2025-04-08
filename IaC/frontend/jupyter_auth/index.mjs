@@ -124,7 +124,7 @@ export const handler = async (event) => {
 function extractUuidFromPath(path) {
     // Example: /api/jupyter-access/uuid-part-12345/more/path
     // Adjust regex if UUID format or path structure is different
-    const match = path.match(/\/api\/jupyter-access\/([a-f0-9-]{36})(?:$|[\/\?])/);
+    const match = path.match(/\/api\/jupyter-access\/([a-f0-9-]{36})/);
     return match ? match[1] : null;
 }
 
