@@ -10,6 +10,7 @@ import {
   UserNotConfirmedException,
   UserLambdaValidationException
 } from '@aws-sdk/client-cognito-identity-provider';
+
 import {
   COGNITO_CONFIRM_STATUS,
   COGNITO_SIGN_IN_STATUS,
@@ -38,7 +39,6 @@ export const cognitoSignIn = async (args) => {
     const result = await cognitoClient.send(command);
     const { AuthenticationResult, ChallengeName, Session } = result;
     if (AuthenticationResult) {
-      localStorage.setItem('refreshToken', AuthenticationResult.RefreshToken);
       return {
         status: COGNITO_SIGN_IN_STATUS.SUCCESS,
         idToken: AuthenticationResult.IdToken || '',
@@ -142,6 +142,11 @@ export const cognitoConfirmSignUp = async (email, code) => {
 
 // Refresh Token Usage (with @aws-sdk/client-cognito-identity-provider)
 export const cognitoRefreshAuth = async (refreshToken) => {
+  if (!refreshToken) {
+    console.error('cognitoRefreshAuth: No refresh token provided');
+    location.href = '/';
+  }
+
   const params = {
     AuthFlow: 'REFRESH_TOKEN_AUTH',
     ClientId,
@@ -152,6 +157,7 @@ export const cognitoRefreshAuth = async (refreshToken) => {
 
   const command = new InitiateAuthCommand(params);
   const result = await cognitoClient.send(command).catch(() => {
+    console.error('cognitoRefreshAuth: Failed to refresh token');
     location.href = '/';
   });
 

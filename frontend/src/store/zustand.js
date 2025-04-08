@@ -1,37 +1,57 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { parseJwt } from '../utils/index.js';
+import { Cookies } from 'react-cookie';
+
+const cookies = new Cookies();
 
 export const useUserStore = create(
   persist(
     (set) => ({
       idToken: '',
       accessToken: '',
+      refreshToken: '',
       userInfo: {},
-      setIdToken: (idToken) =>
+      setIdToken: (idToken) => {
         set(() => ({
           idToken,
-          userInfo: parseJwt(idToken) // Assume parseJwt is a function to parse the token
-        })),
-      setAccessToken: (accessToken) =>
+          userInfo: parseJwt(idToken)
+        }));
+        cookies.set('idToken', idToken);
+      },
+      setAccessToken: (accessToken) => {
         set(() => ({
           accessToken
-        })),
-      logout: () =>
+        }));
+        cookies.set('accessToken', accessToken);
+      },
+      setRefreshToken: (refreshToken) => {
+        set(() => ({
+          refreshToken
+        }));
+        cookies.set('refreshToken', refreshToken);
+      },
+      logout: () => {
         set(() => ({
           idToken: '',
           accessToken: '',
+          refreshToken: '',
           userInfo: {}
-        }))
+        }));
+        cookies.remove('idToken');
+        cookies.remove('accessToken');
+        cookies.remove('refreshToken');
+      }
     }),
     {
-      name: 'user-storage', // Key to store data in local storage
+      name: 'user-storage',
       partialize: (state) => ({
         idToken: state.idToken,
         accessToken: state.accessToken,
+        refreshToken: state.refreshToken,
         userInfo: state.userInfo
-      }), // 선택한 데이터만 저장
-      getStorage: () => localStorage // 로컬 스토리지 사용 (디폴트)
+      }),
+      getStorage: () => localStorage
     }
   )
 );

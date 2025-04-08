@@ -1,16 +1,21 @@
 import './App.css';
-import Login from './pages/forms/Login/index.jsx';
-import { ConfigProvider, message } from 'antd';
-import { StyleProvider } from '@ant-design/cssinjs';
-import Signup from './pages/forms/Signup/index.jsx';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import Confirm from './pages/forms/Confirm/index.jsx';
+
 import { useEffect } from 'react';
 import { useMessageApi } from './store/zustand.js';
+
+import { ConfigProvider, message } from 'antd';
+import { StyleProvider } from '@ant-design/cssinjs';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext.jsx';
+
+import DefaultLayout from './layout.jsx';
+import Login from './pages/forms/Login/index.jsx';
+import Signup from './pages/forms/Signup/index.jsx';
+import Confirm from './pages/forms/Confirm/index.jsx';
 import Overview from './pages/Overview/index.jsx';
 import Jupyter from './pages/Jupyter/index.jsx';
 import Admin from './pages/Admin/index.jsx';
-import DefaultLayout from './layout.jsx';
+import NotFound from './pages/404/index.jsx';
 
 const settings = {
   components: {
@@ -38,17 +43,19 @@ function App() {
       <StyleProvider layer>
         <ConfigProvider theme={settings} componentSize="middle">
           {contextHolder}
-          <Routes>
-            <Route index element={<Login />} />
-            <Route path={'/sign-up'} element={<Signup />} />
-            <Route path={'/confirm'} element={<Confirm />} />
-            <Route element={<DefaultLayout />}>
-              <Route path={'/overview'} element={<Overview />} />
-              <Route path={'/jupyter'} element={<Jupyter />} />
-              <Route path={'/admin'} element={<Admin />} />
-              <Route path={'/menu4'} element={<></>} />
-            </Route>
-          </Routes>
+          <AuthProvider>
+            <Routes>
+              <Route index element={<Login />} />
+              <Route path={'/sign-up'} element={<Signup />} />
+              <Route path={'/confirm'} element={<Confirm />} />
+              <Route element={<DefaultLayout />}>
+                <Route path={'/overview'} element={<Overview />} />
+                <Route path={'/jupyter'} element={<Jupyter />} />
+                <Route path={'/admin'} element={<Admin />} />
+              </Route>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AuthProvider>
         </ConfigProvider>
       </StyleProvider>
     </BrowserRouter>
