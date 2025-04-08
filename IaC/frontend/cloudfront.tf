@@ -208,6 +208,10 @@ resource "aws_cloudfront_distribution" "distribution" {
       event_type = "viewer-request"
       lambda_arn = aws_lambda_function.jupyter_auth_lambda.qualified_arn
     }
+    lambda_function_association {
+      event_type = "viewer-response"
+      lambda_arn = aws_lambda_function.jupyter_refresh_token_lambda.qualified_arn
+    }
   }
 
   ordered_cache_behavior {
