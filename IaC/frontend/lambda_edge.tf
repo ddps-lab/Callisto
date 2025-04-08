@@ -76,7 +76,8 @@ resource "aws_iam_policy" "cognito_initiate_auth_policy" {
         Effect = "Allow",
         Action = [
           "cognito-idp:InitiateAuth",
-          "cognito-idp:RespondToAuthChallenge"
+          "cognito-idp:RespondToAuthChallenge",
+          "cognito-idp:AdminInitiateAuth"
         ],
         Resource = "arn:aws:cognito-idp:${var.region}:${data.aws_caller_identity.current.account_id}:userpool/${var.callisto_cognito_user_pool_id}"
       }
