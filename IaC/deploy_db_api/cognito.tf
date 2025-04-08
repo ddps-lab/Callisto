@@ -52,6 +52,18 @@ resource "aws_cognito_user_pool_client" "callisto_user_pool_client" {
 
   generate_secret = false
 
+  # Token validity periods (in minutes for id/access, days for refresh)
+  # Ensure refresh_token_validity >= id_token_validity and refresh_token_validity >= access_token_validity
+  # Default values are often 60 mins for id/access, 30 days for refresh. Let's set them explicitly.
+  access_token_validity  = 60  # minutes
+  id_token_validity      = 60  # minutes
+  refresh_token_validity = 30  # days
+  token_validity_units {
+    access_token  = "minutes"
+    id_token      = "minutes"
+    refresh_token = "days"
+  }
+
   # allowed_oauth_flows = [ "code", "implicit" ]
   # allowed_oauth_scopes = [ "email", "openid", "profile", "aws.cognito.signin.user.admin" ]
   # allowed_oauth_flows_user_pool_client = true

@@ -17,16 +17,37 @@ resource "local_file" "jupyter_auth_lambda_index" {
   })
 
 }
-resource "null_resource" "compress_lambda_code" {
+
+resource "local_file" "jupyter_refresh_token_lambda_index" {
+  filename = "${path.module}/jupyter_refresh_token/index_var.mjs"
+  content = templatefile("${path.module}/jupyter_refresh_token/index.mjs", {
+    region = var.region
+    user_pool_id = var.callisto_cognito_user_pool_id
+    client_id = var.callisto_cognito_user_pool_client_id
+  })
+
+}
+resource "null_resource" "compress_lambda_auth_code" {
   provisioner "local-exec" {
     command = <<-EOT
             cd ${path.module}/jupyter_auth && \
             npm install jsonwebtoken && \
             zip -r jupyter_auth_lambda.zip node_modules index_var.mjs
-        EOT
+            EOT
   }
 
   depends_on = [ local_file.jupyter_auth_lambda_index ]
+}
+
+resource "null_resource" "compress_lambda_refresh_token_code" {
+  provisioner "local-exec" {
+    command = <<-EOT
+            cd ${path.module}/jupyter_refresh_token && \
+            zip -r jupyter_refresh_token_lambda.zip index_var.mjs
+            EOT
+  }
+
+  depends_on = [ local_file.jupyter_refresh_token_lambda_index ]
 }
 
 resource "aws_iam_role" "jupyter_auth_lambda_role" {
@@ -55,7 +76,8 @@ resource "aws_iam_policy" "cognito_initiate_auth_policy" {
         Effect = "Allow",
         Action = [
           "cognito-idp:InitiateAuth",
-          "cognito-idp:RespondToAuthChallenge"
+          "cognito-idp:RespondToAuthChallenge",
+          "cognito-idp:AdminInitiateAuth"
         ],
         Resource = "arn:aws:cognito-idp:${var.region}:${data.aws_caller_identity.current.account_id}:userpool/${var.callisto_cognito_user_pool_id}"
       }
@@ -87,5 +109,17 @@ resource "aws_lambda_function" "jupyter_auth_lambda" {
   publish       = true
   provider      = aws.virginia
   timeout       = 5
-  depends_on    = [null_resource.compress_lambda_code]
+  depends_on    = [null_resource.compress_lambda_auth_code]
+}
+
+resource "aws_lambda_function" "jupyter_refresh_token_lambda" {
+  function_name = "callisto-jupyter-refresh-token-lambda-${var.environment}-${var.random_string}"
+  role          = aws_iam_role.jupyter_auth_lambda_role.arn
+  handler       = "index_var.handler"
+  runtime       = "nodejs20.x"
+  filename      = "${path.module}/jupyter_refresh_token/jupyter_refresh_token_lambda.zip"
+  publish       = true
+  provider      = aws.virginia
+  timeout       = 5
+  depends_on    = [null_resource.compress_lambda_refresh_token_code]
 }
