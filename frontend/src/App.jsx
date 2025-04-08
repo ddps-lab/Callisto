@@ -15,6 +15,7 @@ import Confirm from './pages/forms/Confirm/index.jsx';
 import Overview from './pages/Overview/index.jsx';
 import Jupyter from './pages/Jupyter/index.jsx';
 import Admin from './pages/Admin/index.jsx';
+import NotFound from './pages/404/index.jsx';
 
 const settings = {
   components: {
@@ -52,6 +53,7 @@ function App() {
                 <Route path={'/jupyter'} element={<Jupyter />} />
                 <Route path={'/admin'} element={<Admin />} />
               </Route>
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </AuthProvider>
         </ConfigProvider>

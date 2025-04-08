@@ -19,7 +19,7 @@ export const AuthProvider = ({ children }) => {
     const attemptRefresh = async () => {
       if (idToken && refreshToken) {
         if (isNAToken(idToken)) {
-          console.log('AuthProvider: ID token is invalid or expired.');
+          console.log('AuthProvider: ID token is expired.');
           console.log('AuthProvider: Attempting token refresh...');
           const res = await cognitoRefreshAuth(refreshToken);
           if (res) {
