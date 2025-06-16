@@ -1,11 +1,7 @@
 import { Layout, Menu } from 'antd';
 import { useNavigate } from 'react-router-dom';
-import {
-  DashboardOutlined,
-  ExperimentOutlined,
-  ControlOutlined
-} from '@ant-design/icons';
 import { useUserStore } from '../../store/zustand.js';
+import { CodeBracketSquareIcon, HomeIcon, Cog6ToothIcon } from '@heroicons/react/24/outline';
 
 export default function SideBar() {
   const navigate = useNavigate();
@@ -14,19 +10,19 @@ export default function SideBar() {
   const items = [
     {
       key: 'overview',
-      icon: <DashboardOutlined />,
+      icon: <HomeIcon className='w-5 h-5' />,
       label: 'Overview'
     },
     {
       key: 'jupyter',
-      icon: <ExperimentOutlined />,
+      icon: <CodeBracketSquareIcon className='w-5 h-5' />,
       label: 'Jupyter'
     },
     ...(userInfo.profile === 'admin'
       ? [
           {
             key: 'admin',
-            icon: <ControlOutlined />,
+            icon: <Cog6ToothIcon className='w-5 h-5' />,
             label: 'Admin'
           }
         ]
@@ -47,8 +43,10 @@ export default function SideBar() {
           display: 'flex',
           flexDirection: 'column',
           height: '100%',
-          border: 'none'
+          border: 'none',
+          padding: '0px'
         }}
+        className=''
         items={items}
         onClick={handleMenuClick}
       />

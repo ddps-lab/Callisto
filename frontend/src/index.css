@@ -29,3 +29,17 @@ body {
   min-width: 900px;
   min-height: 100vh;
 }
+
+@theme {
+  --color-brand-50: #f3f7fc;
+  --color-brand-100: #e5eff9;
+  --color-brand-200: #c5ddf2;
+  --color-brand-300: #92c2e7;
+  --color-brand-400: #58a3d8;
+  --color-brand-500: #2f7db6;
+  --color-brand-600: #236aa6;
+  --color-brand-700: #1d5587;
+  --color-brand-800: #1c4a70;
+  --color-brand-900: #1c3f5e;
+  --color-brand-950: #13283e;
+}
