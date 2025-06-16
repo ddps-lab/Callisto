@@ -1,6 +1,6 @@
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/user-attachments/assets/55667ec5-3335-499e-bef9-b0ac931350ec" alt="callisto logo" width="300px"/>
-  <img alt="callisto logo" src="https://github.com/user-attachments/assets/45d612fc-d9ce-4d6e-b696-e811798984e9" width="300px"/>
+  <source media="(prefers-color-scheme: dark)" srcset="./docs/images/logo_dark.svg" alt="callisto logo" width="300px"/>
+  <img alt="callisto logo" src="./docs/images/logo_light.svg" width="300px"/>
 </picture>
 
 # 🚀 Cost-Efficient AI Development Platform Using Spot Instances
@@ -16,7 +16,7 @@ Callisto는 **서버리스 컴퓨팅**과 **스팟 인스턴스**를 결합하�
 
 ## ✨ Features
 
-<img width="500" alt="1" src="https://github.com/user-attachments/assets/49748973-d869-4a36-8ef4-40cba68589cb" />
+<img width="500" alt="main" src="./docs/images/img_main.png" />
 
 - 🔐 **Serverless authentication with JWT**  
   Stateless, secure user authentication using JSON Web Tokens (JWT).
@@ -33,7 +33,7 @@ Callisto는 **서버리스 컴퓨팅**과 **스팟 인스턴스**를 결합하�
 
 ## 🏗 Architecture
 
-<img width="500" alt="2" src="https://github.com/user-attachments/assets/ec486ffa-36af-49e8-a3c0-778863c6cca3" />
+<img width="500" alt="diagram" src="./docs/images/img_arch.jpg" />
 
 - **Frontend**: React-based UI for login and Jupyter session requests  
 - **Backend**: Stateless API via AWS Lambda and API Gateway  
