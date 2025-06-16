@@ -18,6 +18,9 @@ import Admin from './pages/Admin/index.jsx';
 import NotFound from './pages/404/index.jsx';
 
 const settings = {
+  token: {
+    colorPrimary: '#2f7db6',
+  },
   components: {
     Form: {
       itemMarginBottom: 8
@@ -27,6 +30,10 @@ const settings = {
       triggerBg: '#fff',
       triggerColor: '#000',
       headerPadding: '0px 24px'
+    },
+    Menu: {
+      itemPaddingInline: 4,
+      itemMarginInline: 4
     }
   }
 };

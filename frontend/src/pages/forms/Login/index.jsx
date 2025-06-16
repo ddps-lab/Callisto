@@ -75,7 +75,7 @@ export default function Login() {
           </Button>
         </Form.Item>
         <Form.Item>
-          <a onClick={() => navigate('/sign-up', { replace: true })}>
+          <a onClick={() => navigate('/sign-up', { replace: true })} className='text-brand-500'>
             Don&apos;t have an account? Sign-up
           </a>
         </Form.Item>

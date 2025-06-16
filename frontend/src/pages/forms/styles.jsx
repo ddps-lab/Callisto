@@ -12,7 +12,7 @@ export const FormLayout = ({ children, onFinish }) => (
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 303 66"
-              className="h-12"
+              className="h-10"
             >
               <path
                 fill="#2F7DB6"
@@ -33,9 +33,73 @@ export const FormLayout = ({ children, onFinish }) => (
             </svg>
           </div>
 
-          <h1 className="font-thin text-slate-800 text-[40px] tracking-[.20em] uppercase">
-            Callisto
-          </h1>
+          <div className='my-4'>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              xmlnsXlink="http://www.w3.org/1999/xlink"
+              viewBox="0 0 257.18 129.89"
+              className="w-8/12"
+            >
+              <defs>
+                <linearGradient
+                  id="linear-gradient"
+                  x1={206.8}
+                  x2={205.69}
+                  y1={299}
+                  y2={289.02}
+                  gradientUnits="userSpaceOnUse"
+                >
+                  <stop offset={0} stopColor="#00477f" />
+                  <stop offset={1} stopColor="#2f7db6" />
+                </linearGradient>
+                <linearGradient
+                  xlinkHref="#linear-gradient"
+                  id="linear-gradient-2"
+                  x1={202.88}
+                  x2={201.77}
+                  y1={299.43}
+                  y2={289.46}
+                />
+                <radialGradient
+                  id="radial-gradient"
+                  cx={241.35}
+                  cy={64.99}
+                  r={7.65}
+                  fx={241.35}
+                  fy={64.99}
+                  gradientUnits="userSpaceOnUse"
+                >
+                  <stop offset={0} stopColor="#2f7db6" />
+                  <stop offset={1} stopColor="#00477f" />
+                </radialGradient>
+                <style>
+                  {
+                    ".cls-1 {\n        fill: #414042;\n      }\n\n      .cls-2 {\n        fill: url(#linear-gradient-2);\n      }\n\n      .cls-3 {\n        fill: url(#radial-gradient);\n      }\n\n      .cls-4 {\n        fill: url(#linear-gradient);\n      }"
+                  }
+                </style>
+              </defs>
+              <path
+                d="M178.78 0c-29.59 0-54.6 19.89-62.4 47h4.6c7.66-24.64 30.68-42.58 57.8-42.58s50.62 18.34 58.03 43.39c1.41-.39 2.89-.61 4.42-.63C233.49 19.98 208.44 0 178.78 0Z"
+                className="cls-4"
+              />
+              <path
+                d="M178.78 125.46c-27.13 0-50.14-17.94-57.8-42.58h-4.6c7.81 27.11 32.82 47 62.4 47s54.7-19.98 62.45-47.18c-1.53-.02-3.01-.24-4.42-.63-7.41 25.05-30.61 43.39-58.03 43.39Z"
+                className="cls-2"
+              />
+              <path
+                d="m38.91 80.21 11.18-30.53h4.01l11.18 30.53h-4.01l-3.04-8.6H45.96l-3.08 8.6h-3.96Zm18.13-11.94-4.85-13.66h-.25l-4.85 13.66h9.95ZM78.03 49.67h3.8v27.16H96v3.37H78.03V49.67ZM109.7 49.67h3.8v27.16h14.17v3.37H109.7V49.67ZM145.16 80.21h-3.79V49.68h3.79v30.53ZM170.45 52.62c-4.05 0-6.71 2.11-6.71 5.02 0 3.21 3.58 4.39 5.9 4.98l3.04.84c3.29.84 8.65 2.74 8.65 8.43 0 4.98-4.01 8.86-11.09 8.86-6.58 0-10.67-3.42-11.01-8.48h3.88c.34 3.42 3.5 5.02 7.13 5.02 4.22 0 7.38-2.15 7.38-5.48 0-2.95-2.83-4.09-6.03-5.02l-3.75-1.01c-4.81-1.39-7.76-3.84-7.76-7.97 0-5.14 4.6-8.56 10.5-8.56s10.16 3.46 10.33 8.1h-3.71c-.34-2.99-3.08-4.72-6.75-4.72ZM193.72 49.67h23.03v3.37h-9.57V80.2h-3.84V53.04h-9.62v-3.37ZM241.52 80.61c-8.64 0-15.67-7.03-15.67-15.67s7.03-15.67 15.67-15.67 15.67 7.03 15.67 15.67-7.03 15.67-15.67 15.67Zm0-27.83c-6.71 0-12.16 5.46-12.16 12.16s5.46 12.16 12.16 12.16 12.16-5.46 12.16-12.16-5.46-12.16-12.16-12.16Z"
+                className="cls-1"
+              />
+              <path
+                d="M241.35 72.64c-4.22 0-7.65-3.43-7.65-7.65s3.43-7.65 7.65-7.65 7.65 3.43 7.65 7.65-3.43 7.65-7.65 7.65Z"
+                className="cls-3"
+              />
+              <path
+                d="M15.67 77.1c-6.71 0-12.16-5.46-12.16-12.16s5.46-12.16 12.16-12.16c4.66 0 8.72 2.64 10.76 6.51h3.84c-2.27-5.85-7.95-10.01-14.6-10.01C7.03 49.28 0 56.31 0 64.95s7.03 15.67 15.67 15.67c6.64 0 12.32-4.16 14.6-10.01h-3.84c-2.04 3.86-6.09 6.51-10.76 6.51Z"
+                className="cls-1"
+              />
+            </svg>
+          </div>
         </div>
         <Form
           className="w-full"

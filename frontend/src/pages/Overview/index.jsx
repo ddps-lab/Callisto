@@ -40,6 +40,7 @@ export default function Overview() {
               message="Overview page is under construction."
               type="info"
               showIcon
+              className='bg-brand-200/50 text-brand-800 [&_.ant-alert-icon]:text-brand-700 border-brand-500'
             />
           </Col>
         </Row>
@@ -58,7 +59,7 @@ export default function Overview() {
               <Progress
                 percent={63}
                 size={['100%', 20]}
-                strokeColor="#1890ff"
+                strokeColor="#00b493"
                 className="mb-8"
               />
 
@@ -68,7 +69,7 @@ export default function Overview() {
                   <XAxis dataKey="name" />
                   <YAxis />
                   <Tooltip />
-                  <Line type="monotone" dataKey="cost" stroke="#1890ff" />
+                  <Line type="monotone" dataKey="cost" stroke="#00b493" />
                 </LineChart>
               </ResponsiveContainer>
             </Card>
@@ -85,7 +86,7 @@ export default function Overview() {
                   <XAxis dataKey="name" />
                   <YAxis />
                   <Tooltip />
-                  <Bar dataKey="cost" fill="#1890ff" />
+                  <Bar dataKey="cost" fill="#00b493" />
                 </BarChart>
               </ResponsiveContainer>
             </Card>

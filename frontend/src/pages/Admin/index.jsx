@@ -2,6 +2,7 @@ import {
   Badge,
   Button,
   ConfigProvider,
+  Card,
   Drawer,
   Dropdown,
   Flex,
@@ -9,7 +10,8 @@ import {
   Table,
   Tooltip,
   Empty,
-  Checkbox
+  Checkbox,
+  Statistic,
 } from 'antd';
 import { SyncOutlined } from '@ant-design/icons';
 import { useMessageApi } from '../../store/zustand.js';
@@ -303,6 +305,38 @@ export default function Admin() {
             </Dropdown>
           </Flex>
         </Flex>
+
+        <Flex gap="large" wrap="wrap" style={{ width: '100%', marginBottom: 16 }}>
+          <div style={{ flexGrow: 1, textAlign: 'center' }}>
+            <Badge.Ribbon text="All Instances" color='black'>
+              <Card style={{ flexGrow: 1, textAlign: 'center' }}>
+                <Statistic loading={fetching} value={data.length} />
+              </Card>
+            </Badge.Ribbon>
+          </div>
+          <div style={{ flexGrow: 1, textAlign: 'center' }}>
+            <Badge.Ribbon text="Pending" color="gray">
+              <Card style={{ flexGrow: 1, textAlign: 'center' }}>
+                <Statistic loading={fetching} value={data.filter((item) => item.status === 'pending').length} />
+              </Card>
+            </Badge.Ribbon>
+          </div>
+          <div style={{ flexGrow: 1, textAlign: 'center' }}>
+            <Badge.Ribbon text="Running" color="#00b493">
+              <Card style={{ flexGrow: 1, textAlign: 'center' }}>
+                <Statistic loading={fetching} value={data.filter((item) => item.status === 'running').length} />
+              </Card>
+            </Badge.Ribbon>
+          </div>
+          <div style={{ flexGrow: 1, textAlign: 'center' }}>
+            <Badge.Ribbon text="Stopped" color="red">
+              <Card style={{ flexGrow: 1, textAlign: 'center' }}>
+                <Statistic loading={fetching} value={data.filter((item) => item.status === 'stopped').length} />
+              </Card>
+            </Badge.Ribbon>
+          </div>
+        </Flex>
+
         <Table
           loading={fetching}
           columns={TABLE_COLUMNS}
