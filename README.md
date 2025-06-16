@@ -1,6 +1,6 @@
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/user-attachments/assets/55667ec5-3335-499e-bef9-b0ac931350ec" alt="callisto logo" width="300px"/>
-  <img alt="callisto logo" src="https://github.com/user-attachments/assets/45d612fc-d9ce-4d6e-b696-e811798984e9" width="300px"/>
+  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/user-attachments/assets/dde315fe-69ce-4569-bfa9-8ca919345181" alt="callisto logo" width="300px"/>
+  <img alt="callisto logo" src="https://github.com/user-attachments/assets/b28df81a-5e96-43b2-9057-a245fa99e73b" width="300px"/>
 </picture>
 
 # 🚀 Cost-Efficient AI Development Platform Using Spot Instances
@@ -74,3 +74,4 @@ This project is licensed under the terms of the GNU General Public License v3.0.
 ---
 
 > This work was supported by Institute of Information & communications Technology Planning & Evaluation(IITP) grant funded by the Korea government(MSIT) (RS-2022-00144309, SW StarLab)
+
