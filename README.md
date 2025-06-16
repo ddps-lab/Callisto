@@ -70,8 +70,3 @@ Callisto는 **서버리스 컴퓨팅**과 **스팟 인스턴스**를 결합하�
 ## 📄 License
 
 This project is licensed under the terms of the GNU General Public License v3.0.
-
----
-
-> This work was supported by Institute of Information & communications Technology Planning & Evaluation(IITP) grant funded by the Korea government(MSIT) (RS-2022-00144309, SW StarLab)
-
