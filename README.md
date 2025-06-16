@@ -14,11 +14,12 @@ Callisto는 **서버리스 컴퓨팅**과 **스팟 인스턴스**를 결합하�
 
 ---
 
-## ✨ Features  
+## ✨ Features
+
+<img width="500" alt="1" src="https://github.com/user-attachments/assets/49748973-d869-4a36-8ef4-40cba68589cb" />
 
 - 🔐 **Serverless authentication with JWT**  
   Stateless, secure user authentication using JSON Web Tokens (JWT).
-
 
 - ☁️ **Dynamic spot instance provisioning**  
   Uses AWS `price-capacity-optimized` strategy to launch cost-effective and stable spot instances.
@@ -29,18 +30,17 @@ Callisto는 **서버리스 컴퓨팅**과 **스팟 인스턴스**를 결합하�
 - 📉 **Verified cost savings**  
   Up to 77.44% reduction in real-world classroom deployments.
 
----
 
 ## 🏗 Architecture
+
+<img width="500" alt="2" src="https://github.com/user-attachments/assets/ec486ffa-36af-49e8-a3c0-778863c6cca3" />
 
 - **Frontend**: React-based UI for login and Jupyter session requests  
 - **Backend**: Stateless API via AWS Lambda and API Gateway  
 - **Compute**: EKS + Karpenter for spot-based auto-scaling
 
----
 
 ## 📦 How to deploy  
-
 
 - You need change the contents of variables.tf file.
 - Run the command below :
@@ -49,9 +49,6 @@ Callisto는 **서버리스 컴퓨팅**과 **스팟 인스턴스**를 결합하�
     terraform init
     terraform apply --auto-approve
     ```
-
-
----
 
 ## 📊 Cost Comparison  
 
@@ -65,14 +62,10 @@ Callisto는 **서버리스 컴퓨팅**과 **스팟 인스턴스**를 결합하�
 > In a real university class with 40 students, the total cost was only **$34.43** over 50 days.  
 
 
----
-
 ## 🤝 Contributing
 
 - Fork the repo and create a PR from `dev` branch  
 - Submit issues for bugs or feature requests  
-
----
 
 ## 📄 License
 
